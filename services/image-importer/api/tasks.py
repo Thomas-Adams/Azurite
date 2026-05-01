@@ -1,7 +1,7 @@
 import os
 import asyncio
 
-from api import jobs
+from api.state import jobs
 from api.websocket import manager
 
 
