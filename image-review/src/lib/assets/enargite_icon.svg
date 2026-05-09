@@ -1,0 +1,61 @@
+<svg width="680" height="680" viewBox="0 0 680 680" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Enargite crystal icon</title>
+<desc>Three dark metallic prismatic crystals forming a cluster with vertical striations, representing enargite mineral</desc>
+<defs>
+<clipPath id="cl"><polygon points="160,560 270,560 270,380 160,380"/></clipPath>
+<clipPath id="cc"><polygon points="285,560 410,560 410,160 285,160"/></clipPath>
+<clipPath id="cr"><polygon points="420,560 520,560 520,295 420,295"/></clipPath>
+</defs>
+
+<!-- Left crystal -->
+<polygon points="270,560 310,540 310,360 270,380" fill="#0d0d1a"/>
+<polygon points="160,380 270,380 310,360 200,360" fill="#2c2c44"/>
+<polygon points="160,560 270,560 270,380 160,380" fill="#1a1a2c"/>
+<g clip-path="url(#cl)">
+  <line x1="175" y1="370" x2="175" y2="565" stroke="#2e2e4a" stroke-width="1.2"/>
+  <line x1="190" y1="370" x2="190" y2="565" stroke="#2e2e4a" stroke-width="1.2"/>
+  <line x1="205" y1="370" x2="205" y2="565" stroke="#2e2e4a" stroke-width="1.2"/>
+  <line x1="220" y1="370" x2="220" y2="565" stroke="#2e2e4a" stroke-width="1.2"/>
+  <line x1="235" y1="370" x2="235" y2="565" stroke="#2e2e4a" stroke-width="1.2"/>
+  <line x1="250" y1="370" x2="250" y2="565" stroke="#2e2e4a" stroke-width="1.2"/>
+  <line x1="265" y1="370" x2="265" y2="565" stroke="#2e2e4a" stroke-width="1.2"/>
+</g>
+<line x1="160" y1="380" x2="270" y2="380" stroke="#3a3a55" stroke-width="1"/>
+<line x1="160" y1="380" x2="160" y2="560" stroke="#343450" stroke-width="1.5"/>
+
+<!-- Center crystal -->
+<polygon points="410,560 452,537 452,137 410,160" fill="#101020"/>
+<polygon points="285,160 410,160 452,137 327,137" fill="#343458"/>
+<polygon points="285,560 410,560 410,160 285,160" fill="#1e1e34"/>
+<g clip-path="url(#cc)">
+  <line x1="300" y1="150" x2="300" y2="565" stroke="#2e2e4e" stroke-width="1.2"/>
+  <line x1="315" y1="150" x2="315" y2="565" stroke="#2e2e4e" stroke-width="1.2"/>
+  <line x1="330" y1="150" x2="330" y2="565" stroke="#2e2e4e" stroke-width="1.2"/>
+  <line x1="345" y1="150" x2="345" y2="565" stroke="#2e2e4e" stroke-width="1.2"/>
+  <line x1="360" y1="150" x2="360" y2="565" stroke="#2e2e4e" stroke-width="1.2"/>
+  <line x1="375" y1="150" x2="375" y2="565" stroke="#2e2e4e" stroke-width="1.2"/>
+  <line x1="390" y1="150" x2="390" y2="565" stroke="#2e2e4e" stroke-width="1.2"/>
+  <line x1="405" y1="150" x2="405" y2="565" stroke="#2e2e4e" stroke-width="1.2"/>
+</g>
+<line x1="285" y1="160" x2="410" y2="160" stroke="#3e3e62" stroke-width="1.2"/>
+<line x1="285" y1="160" x2="285" y2="560" stroke="#3a3a5c" stroke-width="2"/>
+<polygon points="285,160 310,160 294,380 285,380" fill="#28283e" opacity="0.7"/>
+
+<!-- Right crystal -->
+<polygon points="520,560 562,538 562,273 520,295" fill="#0c0c1a"/>
+<polygon points="420,295 520,295 562,273 462,273" fill="#282842"/>
+<polygon points="420,560 520,560 520,295 420,295" fill="#181828"/>
+<g clip-path="url(#cr)">
+  <line x1="435" y1="285" x2="435" y2="565" stroke="#28284a" stroke-width="1.2"/>
+  <line x1="450" y1="285" x2="450" y2="565" stroke="#28284a" stroke-width="1.2"/>
+  <line x1="465" y1="285" x2="465" y2="565" stroke="#28284a" stroke-width="1.2"/>
+  <line x1="480" y1="285" x2="480" y2="565" stroke="#28284a" stroke-width="1.2"/>
+  <line x1="495" y1="285" x2="495" y2="565" stroke="#28284a" stroke-width="1.2"/>
+  <line x1="510" y1="285" x2="510" y2="565" stroke="#28284a" stroke-width="1.2"/>
+</g>
+<line x1="420" y1="295" x2="520" y2="295" stroke="#36364e" stroke-width="1"/>
+<line x1="420" y1="295" x2="420" y2="560" stroke="#303048" stroke-width="1.5"/>
+
+<!-- Ground line -->
+<line x1="148" y1="560" x2="575" y2="560" stroke="#26263c" stroke-width="1.2"/>
+</svg>
