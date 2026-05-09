@@ -114,7 +114,7 @@ Azurite/
 
 5. **Environment variables** (in `.env` or prefix with `AZURITE_`):
    ```
-   AZURITE_IMAGE_ROOT=/home/tadams/stable-diffusion
+   AZURITE_IMAGE_ROOT=/mnt/windows/stablediffusion
    AZURITE_DB_HOST=localhost
    AZURITE_DB_PORT=5432
    AZURITE_DB_NAME=pony

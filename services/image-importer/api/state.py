@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 
-
+from config import settings
 
 app = FastAPI()
 
@@ -15,10 +15,9 @@ app.add_middleware(
 )
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
-IMAGE_ROOT = os.environ.get("AZURITE_IMAGE_ROOT", "/home/tadams/stable-diffusion")
+IMAGE_ROOT = settings.image_root
 SUB_FOLDERS = ["vorlagen-red-elf", "vorlagen-tsukuyomi"]
 
-# ← no empty string, no IMAGE_ROOT itself
 STATIC_FOLDERS = [
     os.path.join(IMAGE_ROOT, sub)
     for sub in SUB_FOLDERS

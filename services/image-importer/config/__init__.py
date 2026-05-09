@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     db_user: str = "pony_admin"
     db_password: str = "admin"
     db_schema: str = "pony_image"
+    image_root: str = "/mnt/windows/stablediffusion"
     debug: bool = True
     minio_endpoint: str = "localhost:9000"
     minio_access_key: str = "minioadmin"
