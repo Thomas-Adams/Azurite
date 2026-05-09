@@ -8,8 +8,6 @@
     let iconSize = $derived(layoutRail ? 24 : 32);
     let iconStyle = $derived(`width:${iconSize}px;height:${iconSize}px;`);
 
-
-
     const toggleLayout = () => {
         layoutRail = !layoutRail;
     }
@@ -19,7 +17,6 @@
     }
 
     const {navItems}: Props = $props();
-    const homeIcon = "material-symbols:home";
 </script>
 
 <Navigation layout={layoutRail ? 'rail' : 'sidebar'} class={layoutRail ? '' : 'grid grid-rows-[1fr_auto] gap-4'}>
@@ -39,7 +36,3 @@
         </Navigation.Menu>
     </Navigation.Content>
 </Navigation>
-
-<style>
-
-</style>

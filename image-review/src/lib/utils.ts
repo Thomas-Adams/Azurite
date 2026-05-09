@@ -12,16 +12,6 @@ export type WithoutChildren<T> = T extends { children?: any } ? Omit<T, 'childre
 export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
 export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & { ref?: U | null };
 
-import {MediaQuery} from 'svelte/reactivity';
-
-const MOBILE_BREAKPOINT = 768;
-
-export class IsMobile extends MediaQuery {
-    constructor() {
-        super(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-    }
-}
-
 export type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
 export type JsonObject = { [key: string]: JsonValue };
 
@@ -33,7 +23,7 @@ export interface Paginated<T> {
     total_pages: number;
     has_next: boolean;
     has_prev: boolean;
-    params: Record<string, string | number | boolean | Date | null | undefined>[];
+    params: Record<string, string | number | boolean | Date | null | undefined>;
     content: T[];
 }
 
@@ -52,13 +42,13 @@ export interface ImageFile {
 
 export interface Review {
     rating: number;
-    comment:string;
+    comment: string;
     hash: string;
     path: string;
     bucket_name: string;
 }
 
-export  interface ErrorMessage {
+export interface ErrorMessage {
     field?: string | null;
     message: string;
 }
@@ -83,7 +73,6 @@ export function flattenMeta(
     return Object.entries(obj).flatMap(([key, value]) => {
         const fullKey = prefix ? `${prefix}.${key}` : key;
 
-        // Exclude top-level keys or any key matching the exclude set
         if (exclude.has(key) || exclude.has(fullKey)) return [];
 
         if (Array.isArray(value)) {

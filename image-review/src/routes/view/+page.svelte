@@ -6,21 +6,17 @@
     import ReviewDialog from '@/components/custom/ReviewDialog.svelte';
 
     const iconSize = 32;
-    let reviewOpen = $state(false);
     let slides = $state<ImageFile[]>([]);
     let offset = $state(0);
     let total = $state(0);
     let loading = $state(false);
     let hasMore = $state(true);
     let currentPage = $state(1);
-    let currentSlide = $state(undefined);
     let limit = $state(10);
     let sort = $state('name' as SortParam);
-    let ws: WebSocket | null = null;
     let total_pages = $state(0);
     let currentBatch = $state<Paginated<ImageFile>>();
-    let queryParams = $state({});
-    let allLoaded = $derived(slides.length >= total && total > 0);
+    let queryParams = $state<Record<string, string>>({});
     let currentFolder = $state('vorlagen-tsukuyomi/vorlagen-bilder')
 
 
@@ -107,13 +103,6 @@
             handleSubmit();
         }
     });
-
-    $effect(() => {
-        console.log('slideIndex:', slideIndex);
-        console.log('currentImage:', currentImage);
-        console.log('slides count:', slides.length);
-    });
-
 
     async function postReview(review: Review): Promise<ReviewResult> {
         const res = await fetch(`${API}/review`, {
