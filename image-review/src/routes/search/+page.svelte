@@ -35,6 +35,17 @@
     let selected = $state<SearchHit | null>(null);
     let infoHit = $state<SearchHit | null>(null);
 
+    // Rating filters: 1=very good, 2=acceptable, 3=not acceptable
+    let ratingFilter = $state({ 1: true, 2: true, 3: false });
+
+    const allChecked = $derived(ratingFilter[1] && ratingFilter[2] && ratingFilter[3]);
+    const someChecked = $derived(ratingFilter[1] || ratingFilter[2] || ratingFilter[3]);
+
+    function toggleAll() {
+        const next = !allChecked;
+        ratingFilter = { 1: next, 2: next, 3: next };
+    }
+
     const totalPages = $derived(Math.max(1, Math.ceil(total / LIMIT)));
     const currentPage = $derived(Math.floor(offset / LIMIT) + 1);
 
@@ -43,7 +54,9 @@
         loading = true;
         offset = newOffset;
         try {
-            const params = new URLSearchParams({ q: query, limit: String(LIMIT), offset: String(newOffset) });
+            const active = ([1, 2, 3] as const).filter(r => ratingFilter[r]);
+            const ratings = active.length ? active.join(',') : '1,2,3';
+            const params = new URLSearchParams({ q: query, limit: String(LIMIT), offset: String(newOffset), ratings });
             const res = await fetch(`${API}/api/search?${params}`);
             const data = await res.json();
             hits = data.hits ?? [];
@@ -87,21 +100,43 @@
 <svelte:window on:keydown={onKeydown} />
 
 <!-- Search bar -->
-<form class="flex gap-2 mb-6" onsubmit={(e) => { e.preventDefault(); search(0); }}>
-    <input
-        class="input flex-1"
-        type="text"
-        placeholder="Search by prompt, model, lora, style…"
-        bind:value={query}
-    />
-    <button type="submit" class="btn bg-fuchsia-800 text-white" disabled={loading}>
-        {#if loading}
-            <span class="spinner"></span>
-        {:else}
-            <Icon icon="material-symbols:search" style="width:20px;height:20px;" />
-        {/if}
-        Search
-    </button>
+<form class="flex flex-col gap-3 mb-6" onsubmit={(e) => { e.preventDefault(); search(0); }}>
+    <div class="flex gap-2">
+        <input
+            class="input flex-1"
+            type="text"
+            placeholder="Search by prompt, model, lora, style…"
+            bind:value={query}
+        />
+        <button type="submit" class="btn bg-fuchsia-800 text-white" disabled={loading}>
+            {#if loading}
+                <span class="spinner"></span>
+            {:else}
+                <Icon icon="material-symbols:search" style="width:20px;height:20px;" />
+            {/if}
+            Search
+        </button>
+    </div>
+    <div class="rating-filters">
+        <label class="filter-label">
+            <input type="checkbox" checked={allChecked} indeterminate={!allChecked && someChecked}
+                   onchange={toggleAll} />
+            All
+        </label>
+        <span class="filter-sep">|</span>
+        <label class="filter-label rating-good">
+            <input type="checkbox" bind:checked={ratingFilter[1]} />
+            ✓ Very good
+        </label>
+        <label class="filter-label rating-flawed">
+            <input type="checkbox" bind:checked={ratingFilter[2]} />
+            ~ Acceptable
+        </label>
+        <label class="filter-label rating-bad">
+            <input type="checkbox" bind:checked={ratingFilter[3]} />
+            ✕ Not acceptable
+        </label>
+    </div>
 </form>
 
 <!-- Results count -->
@@ -283,6 +318,26 @@
 {/if}
 
 <style>
+    .rating-filters {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .filter-label {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .filter-sep { color: #64748b; }
+    .rating-good  { color: #16a34a; }
+    .rating-flawed { color: #ca8a04; }
+    .rating-bad   { color: #dc2626; }
+
     /* Grid */
     .thumbnail-grid {
         display: grid;

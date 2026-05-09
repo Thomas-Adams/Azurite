@@ -277,8 +277,13 @@ def search_images(
         q: str = Query(..., min_length=1),
         limit: int = Query(20, ge=1, le=100),
         offset: int = Query(0, ge=0),
+        ratings: str = Query("1,2,3", description="Comma-separated rating values to include"),
 ):
-    result = get_index().search(q, {"limit": limit, "offset": offset})
+    selected = [r.strip() for r in ratings.split(",") if r.strip() in ("1", "2", "3")]
+    search_params: dict = {"limit": limit, "offset": offset}
+    if selected and len(selected) < 3:
+        search_params["filter"] = f"rating IN [{', '.join(selected)}]"
+    result = get_index().search(q, search_params)
     return {
         "query": q,
         "total": result["estimatedTotalHits"],
