@@ -110,10 +110,10 @@
         left: 0;
         right: 0;
         z-index: 999;
-        background: #1e1e2e;
-        border: 1px solid rgba(255,255,255,0.12);
+        background: #ffffff;
+        border: 1px solid #d1d5db;
         border-radius: 0.375rem;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
         max-height: 240px;
         overflow-y: auto;
         list-style: none;
@@ -130,11 +130,13 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        color: #1e293b;
     }
 
     .dir-option:hover,
     .dir-option-active {
-        background: rgba(162, 28, 175, 0.25);
+        background: #f3e8ff;
+        color: #6b21a8;
     }
 
     .dir-icon {
