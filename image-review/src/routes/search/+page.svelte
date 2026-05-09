@@ -33,6 +33,7 @@
     let loading = $state(false);
     let searched = $state(false);
     let selected = $state<SearchHit | null>(null);
+    let infoHit = $state<SearchHit | null>(null);
 
     const totalPages = $derived(Math.max(1, Math.ceil(total / LIMIT)));
     const currentPage = $derived(Math.floor(offset / LIMIT) + 1);
@@ -67,8 +68,19 @@
         selected = null;
     }
 
+    function openInfo(hit: SearchHit) {
+        infoHit = hit;
+    }
+
+    function closeInfo() {
+        infoHit = null;
+    }
+
     function onKeydown(e: KeyboardEvent) {
-        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'Escape') {
+            closeLightbox();
+            closeInfo();
+        }
     }
 </script>
 
@@ -103,13 +115,19 @@
 {#if hits.length > 0}
     <div class="thumbnail-grid">
         {#each hits as hit}
-            <button class="thumbnail-card" onclick={() => openLightbox(hit)} type="button">
-                <img src={hit.url} alt={hit.filename} class="thumbnail-img" loading="lazy" />
+            <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+            <div class="thumbnail-card">
+                <button class="thumbnail-img-btn" onclick={() => openLightbox(hit)} type="button" aria-label="View {hit.filename}">
+                    <img src={hit.url} alt={hit.filename} class="thumbnail-img" loading="lazy" />
+                </button>
                 <div class="thumbnail-footer">
                     <span class="thumbnail-filename">{hit.filename}</span>
                     <span class="rating-dot" title="Rating {hit.rating}">★{hit.rating}</span>
+                    <button class="info-btn" onclick={() => openInfo(hit)} type="button" aria-label="Show generation info">
+                        <Icon icon="material-symbols:info-outline" style="width:14px;height:14px;" />
+                    </button>
                 </div>
-            </button>
+            </div>
         {/each}
     </div>
 
@@ -158,6 +176,112 @@
     </div>
 {/if}
 
+<!-- Info panel -->
+{#if infoHit}
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div class="lightbox-backdrop" onclick={closeInfo}>
+        <!-- svelte-ignore a11y_interactive_supports_focus -->
+        <div class="info-panel" onclick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div class="info-header">
+                <span class="info-title" title={infoHit.filename}>{infoHit.filename}</span>
+                <button class="lightbox-close info-close" onclick={closeInfo} aria-label="Close">✕</button>
+            </div>
+
+            <div class="info-body">
+                <!-- Summary row -->
+                <section class="info-section">
+                    <div class="info-row">
+                        <span class="info-label">Model</span>
+                        <span class="info-value model-name">{infoHit.model ?? '—'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Size</span>
+                        <span class="info-value">{infoHit.image_width} × {infoHit.image_height}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Rating</span>
+                        <span class="info-value"><span class="rating-dot">★{infoHit.rating}</span></span>
+                    </div>
+                    {#if infoHit.comment}
+                        <div class="info-row">
+                            <span class="info-label">Comment</span>
+                            <span class="info-value" style="font-style:italic;color:#aaa;">"{infoHit.comment}"</span>
+                        </div>
+                    {/if}
+                </section>
+
+                <!-- Generation params -->
+                <section class="info-section">
+                    <h3 class="info-section-title">Generation</h3>
+                    <div class="info-row">
+                        <span class="info-label">Steps</span>
+                        <span class="info-value">{infoHit.steps ?? '—'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">CFG</span>
+                        <span class="info-value">{infoHit.cfg ?? '—'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Seed</span>
+                        <span class="info-value seed">{infoHit.seed ?? '—'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Scheduler</span>
+                        <span class="info-value">{infoHit.scheduler ?? '—'}</span>
+                    </div>
+                </section>
+
+                <!-- Positive prompts -->
+                <section class="info-section">
+                    <h3 class="info-section-title">Positive prompts</h3>
+                    <p class="prompt-text positive">{infoHit.positive_prompts || '—'}</p>
+                </section>
+
+                <!-- Negative prompts -->
+                <section class="info-section">
+                    <h3 class="info-section-title">Negative prompts</h3>
+                    <p class="prompt-text negative">{infoHit.negative_prompts || '—'}</p>
+                </section>
+
+                <!-- Styles -->
+                {#if infoHit.styles?.length > 0}
+                    <section class="info-section">
+                        <h3 class="info-section-title">Styles</h3>
+                        <div class="tag-list">
+                            {#each infoHit.styles as style}
+                                <span class="tag">{style}</span>
+                            {/each}
+                        </div>
+                    </section>
+                {/if}
+
+                <!-- LoRAs -->
+                <section class="info-section">
+                    <h3 class="info-section-title">LoRAs</h3>
+                    {#if infoHit.loras?.length > 0}
+                        <table class="lora-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each infoHit.loras as lora}
+                                    <tr>
+                                        <td>{lora}</td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    {:else}
+                        <p class="info-empty">None</p>
+                    {/if}
+                </section>
+            </div>
+        </div>
+    </div>
+{/if}
+
 <style>
     /* Grid */
     .thumbnail-grid {
@@ -172,7 +296,6 @@
         border-radius: 0.5rem;
         overflow: hidden;
         background: #111;
-        cursor: pointer;
         border: 2px solid transparent;
         transition: border-color 0.15s, transform 0.15s;
         text-align: left;
@@ -181,6 +304,15 @@
     .thumbnail-card:hover {
         border-color: #a21caf;
         transform: scale(1.02);
+    }
+
+    .thumbnail-img-btn {
+        display: block;
+        width: 100%;
+        padding: 0;
+        border: none;
+        background: none;
+        cursor: pointer;
     }
 
     .thumbnail-img {
@@ -217,7 +349,27 @@
         white-space: nowrap;
     }
 
-    /* Lightbox */
+    .info-btn {
+        background: #1e1e2e;
+        color: #a78bfa;
+        border: 1px solid #4c1d95;
+        border-radius: 9999px;
+        width: 1.4rem;
+        height: 1.4rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background 0.15s;
+    }
+
+    .info-btn:hover {
+        background: #4c1d95;
+        color: #fff;
+    }
+
+    /* Shared backdrop */
     .lightbox-backdrop {
         position: fixed;
         inset: 0;
@@ -228,6 +380,7 @@
         justify-content: center;
     }
 
+    /* Lightbox */
     .lightbox-content {
         position: relative;
         display: flex;
@@ -282,6 +435,156 @@
     .lightbox-comment {
         font-style: italic;
         color: #aaa;
+    }
+
+    /* Info panel */
+    .info-panel {
+        position: relative;
+        background: #161622;
+        border: 1px solid #2e2e4a;
+        border-radius: 0.75rem;
+        width: min(520px, 95vw);
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
+    }
+
+    .info-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #2e2e4a;
+        flex-shrink: 0;
+    }
+
+    .info-title {
+        flex: 1;
+        font-size: 0.8rem;
+        color: #ccc;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .info-close {
+        position: static;
+        flex-shrink: 0;
+    }
+
+    .info-body {
+        overflow-y: auto;
+        padding: 0.75rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .info-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .info-section-title {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: #7c3aed;
+        margin-bottom: 0.15rem;
+    }
+
+    .info-row {
+        display: flex;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        align-items: baseline;
+    }
+
+    .info-label {
+        color: #888;
+        min-width: 5.5rem;
+        flex-shrink: 0;
+    }
+
+    .info-value {
+        color: #e2e8f0;
+    }
+
+    .model-name {
+        color: #c084fc;
+        font-weight: 600;
+        word-break: break-all;
+    }
+
+    .seed {
+        font-family: monospace;
+        font-size: 0.75rem;
+    }
+
+    .prompt-text {
+        font-size: 0.75rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 8rem;
+        overflow-y: auto;
+        background: #0d0d1a;
+        border-radius: 0.4rem;
+        padding: 0.5rem 0.6rem;
+        margin: 0;
+    }
+
+    .prompt-text.positive { color: #86efac; }
+    .prompt-text.negative { color: #fca5a5; }
+
+    .tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+    }
+
+    .tag {
+        background: #1e1e3a;
+        color: #a78bfa;
+        border: 1px solid #4c1d95;
+        border-radius: 9999px;
+        padding: 0.1rem 0.5rem;
+        font-size: 0.65rem;
+    }
+
+    .lora-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+    }
+
+    .lora-table th {
+        text-align: left;
+        padding: 0.25rem 0.5rem;
+        color: #888;
+        border-bottom: 1px solid #2e2e4a;
+        font-weight: 600;
+    }
+
+    .lora-table td {
+        padding: 0.25rem 0.5rem;
+        color: #e2e8f0;
+        border-bottom: 1px solid #1a1a2e;
+        word-break: break-all;
+    }
+
+    .lora-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .info-empty {
+        font-size: 0.75rem;
+        color: #555;
+        font-style: italic;
+        margin: 0;
     }
 
     /* Spinner */
