@@ -13,12 +13,16 @@ def _find_by_class_type(nodes: Dict[str, Dict[str, Any]], class_type: str) -> Li
 
 def _find_by_title_contains(nodes: Dict[str, Dict[str, Any]], needle: str) -> List[Dict[str, Any]]:
     needle_lower = needle.lower()
-    result = []
-    for node in nodes.values():
-        title = node.get("_meta", {}).get("title", "")
-        if needle_lower in title.lower():
-            result.append(node)
-    return result
+    return [
+        node for node in nodes.values()
+        if needle_lower in node.get("_meta", {}).get("title", "").lower()
+    ]
+
+
+def _node_text(node: Dict[str, Any]) -> str:
+    """Return the text content of a prompt node, checking both 'value' and 'text' keys."""
+    inputs = node.get("inputs", {})
+    return inputs.get("value") or inputs.get("text") or ""
 
 
 def _first_input_value(nodes: List[Dict[str, Any]], key: str) -> Optional[Any]:
@@ -27,6 +31,26 @@ def _first_input_value(nodes: List[Dict[str, Any]], key: str) -> Optional[Any]:
         if value is not None:
             return value
     return None
+
+
+def _resolve_ref(nodes: Dict[str, Dict[str, Any]], value: Any) -> Any:
+    """
+    If value is a ComfyUI node reference [node_id, output_slot], follow it once
+    and return the resolved scalar (seed, value, number …).  Returns value as-is
+    if it is not a reference or the target node has no recognisable scalar.
+    """
+    if not (isinstance(value, list) and len(value) == 2):
+        return value
+    ref_id = str(value[0])
+    ref_node = nodes.get(ref_id)
+    if ref_node is None:
+        return value
+    inputs = ref_node.get("inputs", {})
+    for key in ("seed", "value", "number", "int"):
+        v = inputs.get(key)
+        if v is not None and not isinstance(v, list):
+            return v
+    return value
 
 
 def extract_comfyui_essentials(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -55,7 +79,6 @@ def extract_comfyui_essentials(data: Dict[str, Any]) -> Dict[str, Any]:
             }
         )
 
-    # sort prompt parts a bit more predictably
     def prompt_sort_key(node: Dict[str, Any]) -> int:
         title = node.get("_meta", {}).get("title", "").lower()
         if "start" in title:
@@ -67,12 +90,12 @@ def extract_comfyui_essentials(data: Dict[str, Any]) -> Dict[str, Any]:
         return 99
 
     positive_prompts = [
-        node.get("inputs", {}).get("value", "")
+        _node_text(node)
         for node in sorted(positive_nodes, key=prompt_sort_key)
     ]
 
     negative_prompts = [
-        node.get("inputs", {}).get("value", "")
+        _node_text(node)
         for node in sorted(negative_nodes, key=prompt_sort_key)
     ]
 
@@ -93,12 +116,12 @@ def extract_comfyui_essentials(data: Dict[str, Any]) -> Dict[str, Any]:
         cfg = ks_inputs.get("cfg")
         steps = ks_inputs.get("steps")
         scheduler = ks_inputs.get("scheduler")
-        seed = ks_inputs.get("seed")
+        raw_seed = ks_inputs.get("seed")
+        seed = _resolve_ref(nodes, raw_seed)
 
     width = _first_input_value(width_nodes, "value")
     height = _first_input_value(height_nodes, "value")
 
-    # normalize width/height if they are numeric strings
     try:
         width = int(width) if width is not None else None
     except (TypeError, ValueError):
@@ -123,4 +146,3 @@ def extract_comfyui_essentials(data: Dict[str, Any]) -> Dict[str, Any]:
         "scheduler": scheduler,
         "seed": seed,
     }
-
