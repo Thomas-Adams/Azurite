@@ -1,17 +1,6 @@
 from pydantic_settings import BaseSettings
 
 
-DB_NAME = "azurite"
-DB_SCHEMA = "imp"
-DB_HOST = "localhost"
-DB_PORT = 5432
-DB_USER = "azurite-admin"
-DB_PASSWORD = "admin"
-DB_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?schema={DB_SCHEMA}"
-
-
-
-
 class Settings(BaseSettings):
     db_host: str = "localhost"
     db_port: int = 5432
@@ -19,8 +8,11 @@ class Settings(BaseSettings):
     db_user: str = "pony_admin"
     db_password: str = "admin"
     db_schema: str = "pony_image"
-    service_name: str = "Azurite Image Importer"
     debug: bool = True
+    minio_endpoint: str = "localhost:9000"
+    minio_access_key: str = "minioadmin"
+    minio_secret_key: str = "minioadmin"
+    minio_bucket: str = "tsukuyomi"
 
     @property
     def database_url(self) -> str:
@@ -31,5 +23,4 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 
-# Singleton instance — imported everywhere
 settings = Settings()
