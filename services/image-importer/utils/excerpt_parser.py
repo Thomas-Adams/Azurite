@@ -1,7 +1,4 @@
 from __future__ import annotations
-import json
-from pathlib import Path
-from datetime  import datetime
 
 from typing import Any, Dict, List, Optional
 
@@ -127,14 +124,3 @@ def extract_comfyui_essentials(data: Dict[str, Any]) -> Dict[str, Any]:
         "seed": seed,
     }
 
-
-
-
-if __name__ == "__main__":
-
-
-    path = Path("workflow.json")
-    data = json.loads(path.read_text(encoding="utf-8"))
-
-    extracted = extract_comfyui_essentials(data)
-    print(json.dumps(extracted, indent=2, ensure_ascii=False))

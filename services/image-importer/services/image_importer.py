@@ -4,18 +4,15 @@ import json
 import asyncio
 from PIL import Image
 from pathlib import Path
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from PIL.ImageFile import ImageFile
 from pydantic import TypeAdapter
 from sqlalchemy.ext.asyncio import AsyncSession
-from wcwidth import width
 
 from api.state import IMAGE_ROOT
 from database import async_session_factory
 from dto.request.request_dto import ReviewDto
-from minio.config import minio_client, MINIO_BUCKET_NAME
+from minio.config import minio_client
 from models.generation import Generation
 from models.image import Image as ModelImage
 from models.lora import Lora
@@ -27,10 +24,6 @@ from utils.excerpt_parser import extract_comfyui_essentials
 from utils.image_sha import sha256_of_file
 import logging
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-)
 logger = logging.getLogger(__name__)
 
 
@@ -255,22 +248,6 @@ async def import_one(parsed: dict):
             logger.error(f"Error importing image: {parsed['filename']}", exc_info=True)
             await session.rollback()
             raise
-
-
-async def start_import(images_dir: str):
-    files = scan_images(images_dir)
-    print(f"Found {len(files)} images")
-    for file in files:
-        if file.lower().endswith(".png"):
-            result = read_png_metadata(file)
-            if result is not None:
-                print(f"Importing metadata {file}")
-                await   import_one(result)
-            else:
-                result = read_png_sidecar(file)
-                if result is not None:
-                    print(f"Importing sidecar {file}")
-                    await  import_one(result)
 
 
 async def upload_and_review_image(review_dto: ReviewDto):
