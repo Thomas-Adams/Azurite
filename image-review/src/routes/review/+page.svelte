@@ -197,7 +197,7 @@
     </div>
 
     {#if currentBatch && currentBatch.content && currentBatch.content.length > 0}
-        <Pagination count={currentBatch.total} pageSize={BATCH} page={currentPage} onPageChange={onPageChangeEvent} dir="rtl">
+        <Pagination count={currentBatch.total} pageSize={BATCH} page={currentPage} siblingCount={4} onPageChange={onPageChangeEvent} dir="rtl">
             <Pagination.PrevTrigger>
                 <Icon icon={'mingcute:arrow-right-fill'} style="width:{iconSize} height={iconSize}"/>
             </Pagination.PrevTrigger>
