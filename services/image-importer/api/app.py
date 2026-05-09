@@ -2,7 +2,7 @@ import hashlib
 import mimetypes
 import os
 from datetime import UTC, datetime, timezone
-from pathlib import Path as FSPath, Path  # ← alias to avoid clash with fastapi.Path
+from pathlib import Path
 
 from fastapi import BackgroundTasks, Query, Request
 from fastapi.responses import HTMLResponse
@@ -14,13 +14,14 @@ import api.state as state
 from api.state import app, ALLOWED_EXTENSIONS, STATIC_FOLDERS, IMAGE_ROOT
 from api.tasks import run_scan
 from dto.request.request_dto import ScanImagesRequestDto
+from dto.response.image_dto import ImageFileDto
 from dto.response.paginate import Paginated
 from dto.response.response_dto import StartedJobResponseDto
-from services.image_importer import image_metadata
+from services.image_importer import image_metadata, read_png_metadata, read_png_sidecar, import_one
 from utils.image_sha import sha256_of_file
 from utils.image_utils import read_image_size
 
-TEMPLATES_DIR = FSPath(__file__).parent / "templates"
+TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 BASE_URL = os.environ.get("BASE_URL", "http://127.0.0.1:8000")
@@ -50,7 +51,7 @@ def build_listing(abs_path: str, link_base: str, static_base: str) -> dict:
                 "url": f"{link_base}/{entry.name}",
                 "count": count,
             })
-        elif FSPath(entry.name).suffix.lower() in ALLOWED_EXTENSIONS:
+        elif Path(entry.name).suffix.lower() in ALLOWED_EXTENSIONS:
             images.append({
                 "name": entry.name,
                 "url": f"{static_base}/{entry.name}",
@@ -80,7 +81,7 @@ def listing_root(request: Request):
 
 @app.get("/listing/{rest_path:path}", response_class=HTMLResponse)
 def listing_path(request: Request, rest_path: str):
-    parts = FSPath(rest_path).parts
+    parts = Path(rest_path).parts
     allowed = {os.path.basename(f): f for f in STATIC_FOLDERS}
 
     if not parts or parts[0] not in allowed:
@@ -112,7 +113,7 @@ def listing_path(request: Request, rest_path: str):
 
 @app.get("/file")
 def serve_file(path: str):
-    ext = FSPath(path).suffix.lower()
+    ext = Path(path).suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=403, detail="File type not allowed")
     if not os.path.isfile(path):
@@ -187,8 +188,6 @@ def get_files_for_job(job_id: str, offset: int = 0, limit: int = 10):
 
 @app.post("/import")
 async def import_images(paths: list[str]):
-    from pathlib import Path
-    from services.image_importer import read_png_metadata, read_png_sidecar, import_one
     results = {"imported": [], "errors": []}
     for path in paths:
         p = Path(path)
@@ -239,7 +238,6 @@ def fetch_image_batch(
     offset = (page - 1) * size
     page_files = all_files[offset: offset + size]
 
-    from dto.response.image_dto import ImageFileDto
     return Paginated[ImageFileDto](
         page=page,
         size=size,
@@ -252,18 +250,14 @@ def fetch_image_batch(
             ImageFileDto(
                 filename=entry.name,
                 index=i,
-                url=f"{BASE_URL}/file?path={entry.path}",  # ← full absolute path, served by /file
+                url=f"{BASE_URL}/file?path={entry.path}",
                 full_path=entry.path,
                 size_bytes=entry.stat().st_size,
                 hash=sha256_of_file(entry.path),
-                meta = image_metadata(Path(entry.path)),
+                meta=image_metadata(Path(entry.path)),
                 modified_at=datetime.fromtimestamp(entry.stat().st_mtime, tz=timezone.utc),
                 **dict(zip(("width", "height"), read_image_size(entry.path))),
             )
             for i, entry in enumerate(page_files, start=offset)
         ])
-
-@app.post("/api/review")
-def review_image():
-    pass
 

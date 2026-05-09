@@ -3,8 +3,6 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 
-from minio.config import minio_client
-
 
 
 app = FastAPI()
@@ -17,7 +15,7 @@ app.add_middleware(
 )
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
-IMAGE_ROOT = os.environ.get("IMAGE_ROOT", "/home/tadams/stable-diffusion")
+IMAGE_ROOT = os.environ.get("AZURITE_IMAGE_ROOT", "/home/tadams/stable-diffusion")
 SUB_FOLDERS = ["vorlagen-red-elf", "vorlagen-tsukuyomi"]
 
 # ← no empty string, no IMAGE_ROOT itself

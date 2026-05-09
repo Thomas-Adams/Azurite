@@ -1,5 +1,4 @@
 import os
-import asyncio
 
 from api.state import jobs
 from api.websocket import manager
@@ -21,10 +20,6 @@ async def run_scan(job_id: str, folder: str, extensions: list[str] ):
     for index, file_path in enumerate(all_files, start=1):
         try:
             job["current_image"] = file_path
-
-            # simulate actual work
-            await asyncio.sleep(0.1)
-
             job["scanned_images"] = index
             job["scanned_files"].append(file_path)
             job["progress_percent"] = int(index / job["total_images"] * 100) if job["total_images"] else 100

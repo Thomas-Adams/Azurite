@@ -1,3 +1,3 @@
-from api.state import app as app  # ← "as app" makes it an explicit re-export
+from api.state import app as app
 import api.app
 import api.websocket
