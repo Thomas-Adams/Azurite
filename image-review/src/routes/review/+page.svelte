@@ -51,7 +51,9 @@
             });
             const response = await fetch(`${API}/api/fetch-image-batch?${params}`);
             if (!response.ok) {
-                console.error('Failed to fetch images:', response.statusText);
+                hasMore = false;
+                const detail = await response.json().then(j => j.detail).catch(() => response.statusText);
+                showToast(`Failed to load folder: ${detail}`, 'error');
                 return null;
             }
             const data: Paginated<ImageFile> = await response.json();
@@ -67,7 +69,8 @@
             }
             return data
         } catch (error) {
-            console.error('Error fetching images:', error);
+            hasMore = false;
+            showToast('Could not reach the server — check the API is running', 'error');
             return null;
         } finally {
             loading = false;
