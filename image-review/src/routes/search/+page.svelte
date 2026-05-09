@@ -124,7 +124,7 @@
                     <span class="thumbnail-filename">{hit.filename}</span>
                     <span class="rating-dot" title="Rating {hit.rating}">★{hit.rating}</span>
                     <button class="info-btn" onclick={() => openInfo(hit)} type="button" aria-label="Show generation info">
-                        <Icon icon="material-symbols:info-outline" style="width:14px;height:14px;" />
+                        <Icon icon="material-symbols:info-outline" style="width:16px;height:16px;" />
                     </button>
                 </div>
             </div>
@@ -350,9 +350,9 @@
     }
 
     .info-btn {
-        background: #1e1e2e;
-        color: #a78bfa;
-        border: 1px solid #4c1d95;
+        background: #a21caf;
+        color: #fff;
+        border: none;
         border-radius: 9999px;
         width: 1.4rem;
         height: 1.4rem;
@@ -365,8 +365,7 @@
     }
 
     .info-btn:hover {
-        background: #4c1d95;
-        color: #fff;
+        background: #86198f;
     }
 
     /* Shared backdrop */
