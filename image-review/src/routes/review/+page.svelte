@@ -1,10 +1,15 @@
 <script lang="ts">
     import {onMount, onDestroy} from 'svelte';
+    import {browser} from '$app/environment';
     import Icon from '@iconify/svelte';
     import {Carousel, Pagination} from '@skeletonlabs/skeleton-svelte';
     import {flattenMeta, type ImageFile, type Paginated, type Review, type ReviewResult, type SortParam, toMetaArray} from '@/utils.js';
     import ReviewDialog from '@/components/custom/ReviewDialog.svelte';
     import DirectoryInput from '@/components/custom/DirectoryInput.svelte';
+
+    const FOLDER_KEY = 'review:folder';
+    const SORT_KEY   = 'review:sort';
+    const DEFAULT_FOLDER = 'vorlagen-tsukuyomi/vorlagen-bilder';
 
     const iconSize = 32;
     let slides = $state<ImageFile[]>([]);
@@ -14,11 +19,14 @@
     let hasMore = $state(true);
     let currentPage = $state(1);
     let limit = $state(10);
-    let sort = $state('name' as SortParam);
+    let sort = $state<SortParam>((browser ? localStorage.getItem(SORT_KEY) : null) as SortParam ?? 'name');
     let total_pages = $state(0);
     let currentBatch = $state<Paginated<ImageFile>>();
     let queryParams = $state<Record<string, string>>({});
-    let currentFolder = $state('vorlagen-tsukuyomi/vorlagen-bilder')
+    let currentFolder = $state(browser ? (localStorage.getItem(FOLDER_KEY) ?? DEFAULT_FOLDER) : DEFAULT_FOLDER);
+
+    $effect(() => { if (browser) localStorage.setItem(FOLDER_KEY, currentFolder); });
+    $effect(() => { if (browser) localStorage.setItem(SORT_KEY, sort); });
 
 
     const API = 'http://127.0.0.1:8000';
