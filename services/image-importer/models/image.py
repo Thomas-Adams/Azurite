@@ -2,9 +2,8 @@ from datetime import datetime
 
 from sqlalchemy import (
     BigInteger, Text, Integer, String, CHAR, TIMESTAMP, Float,
-    SmallInteger, CheckConstraint, UniqueConstraint
+    CheckConstraint, UniqueConstraint
 )
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base, EntityBaseMixin
@@ -25,8 +24,5 @@ class Image(EntityBaseMixin, Base):
     mimetype: Mapped[str | None] = mapped_column(String(30), nullable=True)
     file_size: Mapped[int] = mapped_column(BigInteger, nullable=False)
     sha256: Mapped[str] = mapped_column(CHAR(64), nullable=False)
-    aspect_ratio: Mapped[float | None] = mapped_column(Float, nullable=True)  # see note below
+    aspect_ratio: Mapped[float | None] = mapped_column(Float, nullable=True)
     file_date: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
-
-
-

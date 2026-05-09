@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, ForeignKey, UniqueConstraint,   BigInteger, Text, Integer, String, CHAR, TIMESTAMP, Float
+from sqlalchemy import BigInteger, ForeignKey, UniqueConstraint, Text, Integer, String, CHAR, TIMESTAMP, Float
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -24,10 +24,7 @@ class Storage(EntityBaseMixin, Base):
     bucket: Mapped[str | None] = mapped_column(Text, nullable=True)
     host: Mapped[str | None] = mapped_column(Text, nullable=True)
     size: Mapped[int] = mapped_column(Integer, nullable=False)
-    aspect_ratio: Mapped[float|None] = mapped_column(Float, nullable=True)
-    mimetype: Mapped[str| None] = mapped_column(String(255), nullable=True)
+    aspect_ratio: Mapped[float | None] = mapped_column(Float, nullable=True)
+    mimetype: Mapped[str | None] = mapped_column(String(255), nullable=True)
     file_name: Mapped[str | None] = mapped_column(Text, nullable=True)
-    file_date: Mapped[datetime| None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
-
-
-
+    file_date: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)

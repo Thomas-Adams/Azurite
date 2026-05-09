@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, ForeignKey, UniqueConstraint,   BigInteger, Text, Integer, String, CHAR, TIMESTAMP, Float
+from sqlalchemy import BigInteger, ForeignKey, UniqueConstraint, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base, EntityBaseMixin

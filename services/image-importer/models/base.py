@@ -16,5 +16,3 @@ class EntityBaseMixin:
     )
     updated_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), nullable=True, default=None, onupdate=lambda: datetime.now(timezone.utc))
-
-

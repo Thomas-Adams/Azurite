@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, ForeignKey, UniqueConstraint, BigInteger, Text, Integer, String, CHAR, TIMESTAMP, Float
+from sqlalchemy import BigInteger, ForeignKey, Text, Float
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base, EntityBaseMixin
@@ -15,11 +15,10 @@ class Lora(EntityBaseMixin, Base):
         nullable=False,
     )
     name: Mapped[str | None] = mapped_column(Text, nullable=True)
-    model_name: Mapped[str| None] = mapped_column(Text, nullable=True)
-    description: Mapped[str| None] = mapped_column(Text, nullable=True)
-    url: Mapped[str| None] = mapped_column(Text, nullable=True)
-    trigger: Mapped[str| None] = mapped_column(Text, nullable=True)
-    tokens: Mapped[str| None] = mapped_column(Text, nullable=True)
+    model_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    trigger: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tokens: Mapped[str | None] = mapped_column(Text, nullable=True)
     strength_model: Mapped[float | None] = mapped_column(Float, nullable=True)
-    strength_clip: Mapped[float| None] = mapped_column(Float, nullable=True)
-
+    strength_clip: Mapped[float | None] = mapped_column(Float, nullable=True)

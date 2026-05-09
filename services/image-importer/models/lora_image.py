@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, ForeignKey, UniqueConstraint, BigInteger, Text, Integer, String, CHAR, TIMESTAMP, Float
+from sqlalchemy import BigInteger, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base, EntityBaseMixin
@@ -19,6 +19,3 @@ class LoraImage(EntityBaseMixin, Base):
     url: Mapped[str] = mapped_column(Text, nullable=False)
     bucket: Mapped[str] = mapped_column(Text, nullable=False)
     host: Mapped[str] = mapped_column(Text, nullable=False)
-
-
-

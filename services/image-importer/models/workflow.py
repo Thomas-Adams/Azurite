@@ -18,5 +18,3 @@ class Workflow(EntityBaseMixin, Base):
     )
     workflow: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     sidecar: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-
-
