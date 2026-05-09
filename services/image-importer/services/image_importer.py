@@ -166,17 +166,14 @@ async def save_generation(session: AsyncSession, data: Dict[str, Any], filename:
 async def save_storage(session: AsyncSession, data: Dict[str, Any], filename: Path, image: ModelImage) -> Storage:
     model = Storage()
     model.image_id = image.id
+    model.sha256 = image.sha256
     model.file_name = str(data.get("filename")) if data.get("filename") is not None else None
-    model.size = to_int(data, "size") or 0
-    model.width = to_int(data, "width") or 0
-    model.height = to_int(data, "height") or 0
+    model.size = to_int(data, "file_size") or 0
     model.mimetype = data.get("mimetype")
     model.aspect_ratio = data.get("aspect_ratio") or None
-    model.bucket_name = data.get("bucket")
-    model.file_size = to_int(data, "file_size") or 0
+    model.bucket = data.get("bucket_name")
     model.url = data.get("url") or None
     model.file_date = data.get("file_date") or None
-    model.search = data.get("prompt_raw") or None
 
     session.add(model)
     await session.flush()  # gets PK from DB without committing yet
