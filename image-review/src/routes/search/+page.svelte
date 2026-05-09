@@ -37,10 +37,6 @@
     const totalPages = $derived(Math.max(1, Math.ceil(total / LIMIT)));
     const currentPage = $derived(Math.floor(offset / LIMIT) + 1);
 
-    function imageUrl(hit: SearchHit): string {
-        return `${API}/file?path=${encodeURIComponent(hit.path + '/' + hit.filename)}`;
-    }
-
     async function search(newOffset = 0) {
         if (!query.trim()) return;
         loading = true;
@@ -108,7 +104,7 @@
     <div class="thumbnail-grid">
         {#each hits as hit}
             <button class="thumbnail-card" onclick={() => openLightbox(hit)} type="button">
-                <img src={imageUrl(hit)} alt={hit.filename} class="thumbnail-img" loading="lazy" />
+                <img src={hit.url} alt={hit.filename} class="thumbnail-img" loading="lazy" />
                 <div class="thumbnail-footer">
                     <span class="thumbnail-filename">{hit.filename}</span>
                     <span class="rating-dot" title="Rating {hit.rating}">★{hit.rating}</span>
@@ -150,7 +146,7 @@
         <!-- svelte-ignore a11y_interactive_supports_focus -->
         <div class="lightbox-content" onclick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <button class="lightbox-close" onclick={closeLightbox} aria-label="Close">✕</button>
-            <img src={imageUrl(selected)} alt={selected.filename} class="lightbox-img" />
+            <img src={selected.url} alt={selected.filename} class="lightbox-img" />
             <div class="lightbox-meta">
                 <span class="lightbox-model">{selected.model ?? '—'}</span>
                 <span class="rating-dot">★{selected.rating}</span>
