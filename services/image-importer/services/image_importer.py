@@ -11,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.state import IMAGE_ROOT
+from config import settings
 from database import async_session_factory
 from dto.request.request_dto import ReviewDto
 from storage.config import minio_client
@@ -290,7 +291,7 @@ async def upload_and_review_image(review_dto: ReviewDto):
                 str(image_path),
                 content_type=f"image/{image_path.suffix.lstrip('.')}",
             )
-            url = f"http://localhost:9001/{review_dto.bucket_name}/{object_name}"
+            url = f"http://{settings.minio_endpoint}/{review_dto.bucket_name}/{object_name}"
             data.update({"url": url})
             storage = await  save_storage(session, data, image_path, model_image)
             await session.commit()
