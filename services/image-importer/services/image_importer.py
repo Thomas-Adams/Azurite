@@ -292,7 +292,39 @@ async def import_one(parsed: dict):
             raise
 
 
+async def _update_existing_review(review_dto: ReviewDto) -> bool:
+    """If the image is already in the DB, update its review and re-index. Returns True if updated."""
+    async with async_session_factory() as session:
+        row = await session.execute(
+            select(ModelImage, Generation, Review, Storage)
+            .join(Storage, Storage.image_id == ModelImage.id)
+            .join(Generation, Generation.image_id == ModelImage.id)
+            .join(Review, Review.image_id == ModelImage.id)
+            .where(Storage.sha256 == review_dto.hash)
+        )
+        result = row.first()
+        if result is None:
+            return False
+
+        model_image, model_generation, existing_review, storage = result
+
+        existing_review.rating = int(review_dto.rating)
+        existing_review.comment = review_dto.comment
+        await session.commit()
+        await session.refresh(existing_review)
+
+        lora_rows = await session.execute(
+            select(Lora).where(Lora.generation_id == model_generation.id)
+        )
+        loras = list(lora_rows.scalars())
+        index_review(model_image, model_generation, loras, existing_review, storage)
+        return True
+
+
 async def upload_and_review_image(review_dto: ReviewDto):
+    if await _update_existing_review(review_dto):
+        return
+
     async with async_session_factory() as session:
         try:
             if review_dto.path.startswith(IMAGE_ROOT):
