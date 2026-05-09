@@ -14,6 +14,7 @@ from api.state import IMAGE_ROOT
 from config import settings
 from database import async_session_factory
 from dto.request.request_dto import ReviewDto
+from minio.error import S3Error
 from storage.config import minio_client
 from models.generation import Generation
 from models.image import Image as ModelImage
@@ -28,6 +29,28 @@ from utils.image_sha import sha256_of_file
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _public_policy(bucket_name: str) -> str:
+    return json.dumps({
+        "Version": "2012-10-17",
+        "Statement": [{
+            "Effect": "Allow",
+            "Principal": {"AWS": ["*"]},
+            "Action": ["s3:GetObject"],
+            "Resource": [f"arn:aws:s3:::{bucket_name}/*"],
+        }],
+    })
+
+
+def ensure_bucket(bucket_name: str) -> None:
+    if not minio_client.bucket_exists(bucket_name):
+        try:
+            minio_client.make_bucket(bucket_name)
+        except S3Error as e:
+            if e.code not in ("BucketAlreadyOwnedByYou", "BucketAlreadyExists"):
+                raise
+    minio_client.set_bucket_policy(bucket_name, _public_policy(bucket_name))
 
 
 def scan_images(directory):
@@ -285,9 +308,7 @@ async def upload_and_review_image(review_dto: ReviewDto):
             review = await  save_review(session, review_dto, image_path, model_image)
             meta_data = await  save_meta_data(session, data, image_path, model_image)
             object_name = f"{model_image.id}{image_path.suffix}"
-            await asyncio.to_thread(
-                lambda: not minio_client.bucket_exists(review_dto.bucket_name) and minio_client.make_bucket(review_dto.bucket_name)
-            )
+            await asyncio.to_thread(ensure_bucket, review_dto.bucket_name)
             await asyncio.to_thread(
                 minio_client.fput_object,
                 review_dto.bucket_name,
