@@ -318,3 +318,27 @@ async def write_settings(dto: SettingsDto) -> SettingsDto:
 async def list_buckets() -> list[str]:
     row = await get_settings()
     return row.buckets or []
+
+
+@app.get("/api/directories", response_model=list[str])
+async def list_directories(path: str = "") -> list[str]:
+    current_settings = await get_settings()
+    image_root = current_settings.image_root
+    try:
+        p = Path(path) if path.startswith("/") else Path(image_root) / path
+        if path == "" or path.endswith("/") or (path and p.is_dir()):
+            parent, prefix = p, ""
+        else:
+            parent, prefix = p.parent, p.name
+
+        if not parent.is_dir():
+            return []
+
+        results = sorted(
+            str(child) if path.startswith("/") else str(child.relative_to(image_root))
+            for child in parent.iterdir()
+            if child.is_dir() and not child.name.startswith(".") and child.name.lower().startswith(prefix.lower())
+        )
+        return results[:20]
+    except (PermissionError, OSError):
+        return []

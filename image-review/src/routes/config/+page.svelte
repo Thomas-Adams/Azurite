@@ -1,4 +1,5 @@
 <script lang="ts">
+    import DirectoryInput from '@/components/custom/DirectoryInput.svelte';
     const API = 'http://127.0.0.1:8000';
 
     interface AppSettings {
@@ -75,13 +76,10 @@
                     Image root directory
                     <span class="config-hint">Absolute path on the server where Stable Diffusion images are stored</span>
                 </label>
-                <input
+                <DirectoryInput
                     id="image-root"
-                    class="input w-full font-mono text-sm"
-                    type="text"
                     bind:value={imageRoot}
                     placeholder="/mnt/windows/stablediffusion"
-                    required
                 />
             </div>
 

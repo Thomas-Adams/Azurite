@@ -4,6 +4,7 @@
     import {Carousel, Pagination} from '@skeletonlabs/skeleton-svelte';
     import {flattenMeta, type ImageFile, type Paginated, type Review, type ReviewResult, type SortParam, toMetaArray} from '@/utils.js';
     import ReviewDialog from '@/components/custom/ReviewDialog.svelte';
+    import DirectoryInput from '@/components/custom/DirectoryInput.svelte';
 
     const iconSize = 32;
     let slides = $state<ImageFile[]>([]);
@@ -147,9 +148,9 @@
             <div class="loading-spinner"></div>
         </div>
     {/if}
-    <form class="w-4/12  flex justify-start gap-2 space-y-1 p-2">
-        <input class="input h-8" type="text" placeholder="Choose folder " bind:value={currentFolder}/>
-        <button onclick={handleSubmit} type="button" class="btn bg-fuchsia-800 text-white h-8">Submit</button>
+    <form class="w-4/12 flex justify-start gap-2 space-y-1 p-2" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+        <DirectoryInput bind:value={currentFolder} placeholder="Choose folder" class="h-8"/>
+        <button type="submit" class="btn bg-fuchsia-800 text-white h-8">Submit</button>
     </form>
     {#if currentImage }
         <div class="w-3/12 flex justify-start gap-2 space-y-1 p-2 font-small items-center flex-wrap">
