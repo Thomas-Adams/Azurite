@@ -52,12 +52,13 @@ Azurite/
 │   │   ├── image_utils.py (image dimension reading)
 │   │   └── excerpt_parser.py (ComfyUI metadata extraction)
 │   ├── database/ (AsyncSession factory, engine setup)
-│   ├── config/ (Settings via Pydantic)
-│   ├── minio/ (MinIO client config)
+│   ├── config/ (Settings via Pydantic — all env vars use AZURITE_ prefix)
+│   ├── storage/ (MinIO client config)
 │   ├── dto/ (request/response DTOs)
 │   ├── alembic/ (database migrations)
+│   ├── tests/ (pytest suite — utils and service layer, no DB/MinIO)
 │   ├── requirements.txt (dependencies)
-│   └── alembic.ini, reset_migrations.sh
+│   └── alembic.ini, pytest.ini, reset_migrations.sh
 │
 ├── database/ (root-level database scripts)
 └── .venv/ (Python virtual environment)
@@ -109,7 +110,7 @@ Azurite/
 
 4. **MinIO setup**:
    - MinIO instance on localhost:9000
-   - Configured in `services/image-importer/minio/config.py`
+   - Configured in `services/image-importer/storage/config.py`
 
 5. **Environment variables** (in `.env` or prefix with `AZURITE_`):
    ```
@@ -121,6 +122,10 @@ Azurite/
    AZURITE_DB_PASSWORD=admin
    AZURITE_DB_SCHEMA=pony_image
    AZURITE_DEBUG=true
+   AZURITE_MINIO_ENDPOINT=localhost:9000
+   AZURITE_MINIO_ACCESS_KEY=minioadmin
+   AZURITE_MINIO_SECRET_KEY=minioadmin
+   AZURITE_MINIO_BUCKET=tsukuyomi
    ```
 
 6. **Run API server**:
@@ -128,6 +133,21 @@ Azurite/
    cd services/image-importer
    uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
    ```
+
+### Testing (Backend)
+
+Run all tests from the backend service directory:
+```bash
+cd services/image-importer
+../../.venv/bin/python -m pytest
+```
+
+Run a single test file:
+```bash
+../../.venv/bin/python -m pytest tests/test_excerpt_parser.py
+```
+
+Tests cover utils (`excerpt_parser`, `image_sha`, `image_utils`) and the service layer (`image_importer`). DB and MinIO are not tested — all tests are pure-unit or use temporary file fixtures.
 
 ### Frontend (Node/pnpm)
 
