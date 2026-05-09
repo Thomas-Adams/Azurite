@@ -25,6 +25,15 @@
 
     let slideIndex = $state(0);
     let currentImage = $derived(currentBatch?.content?.[slideIndex] ?? null);
+
+    interface Toast { id: number; message: string; type: 'success' | 'error'; }
+    let toasts = $state<Toast[]>([]);
+
+    function showToast(message: string, type: 'success' | 'error') {
+        const id = Date.now();
+        toasts = [...toasts, { id, message, type }];
+        setTimeout(() => { toasts = toasts.filter(t => t.id !== id); }, 4000);
+    }
     const EXCLUDED_META_KEYS = new Set(['raw', 'workflow', 'prompt_raw']);
     let tableData = $derived(currentBatch?.content?.[slideIndex].meta ? flattenMeta(currentBatch?.content?.[slideIndex].meta, '', EXCLUDED_META_KEYS) : []);
 
@@ -105,12 +114,30 @@
     });
 
     async function postReview(review: Review): Promise<ReviewResult> {
-        const res = await fetch(`${API}/review`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(review),
-        });
-        return await res.json() as ReviewResult;
+        try {
+            const res = await fetch(`${API}/review`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(review),
+            });
+            const result = await res.json() as ReviewResult;
+
+            if (result.success) {
+                showToast('Review saved successfully', 'success');
+                // Update badge immediately without waiting for the next batch fetch
+                if (currentBatch && slideIndex < currentBatch.content.length) {
+                    currentBatch.content[slideIndex].already_reviewed = true;
+                    currentBatch.content[slideIndex].review_rating = review.rating;
+                }
+            } else {
+                const msg = result.errors?.[0]?.message ?? 'Review failed';
+                showToast(msg, 'error');
+            }
+            return result;
+        } catch (e) {
+            showToast('Network error — review not saved', 'error');
+            return { success: false, errors: [{ message: String(e) }] };
+        }
     }
 
 </script>
@@ -231,6 +258,18 @@
 
 {/if}
 
+<!-- Toast notifications -->
+{#if toasts.length > 0}
+    <div class="toast-container">
+        {#each toasts as toast (toast.id)}
+            <div class="toast" class:toast-success={toast.type === 'success'} class:toast-error={toast.type === 'error'}>
+                <span>{toast.type === 'success' ? '✓' : '✕'}</span>
+                {toast.message}
+            </div>
+        {/each}
+    </div>
+{/if}
+
 <style>
     .carousel-image {
         height: 80vh;
@@ -317,5 +356,37 @@
         to {
             transform: rotate(360deg);
         }
+    }
+
+    .toast-container {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        pointer-events: none;
+    }
+
+    .toast {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        animation: toast-in 0.2s ease;
+    }
+
+    .toast-success { background: #16a34a; }
+    .toast-error   { background: #dc2626; }
+
+    @keyframes toast-in {
+        from { opacity: 0; transform: translateY(0.5rem); }
+        to   { opacity: 1; transform: translateY(0); }
     }
 </style>

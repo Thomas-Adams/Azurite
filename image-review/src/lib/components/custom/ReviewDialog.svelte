@@ -10,6 +10,7 @@
 
 
 
+    let open = $state(false);
     let rating = $state<number>(3);
     let comment = $state('');
     let bucket = $state('');
@@ -20,14 +21,16 @@
         const review: Review = {
             rating, comment, hash: imageFile.hash, path: imageFile.full_path, bucket_name: bucket,
         }
-        return handleReview(review);
+        const result = await handleReview(review);
+        if (result.success) open = false;
+        return result;
     }
 </script>
 
-<Dialog>
-    <Dialog.Trigger class="btn preset-filled bg-fuchsia-800 text-white">
+<Dialog open={open} onOpenChange={(e) => open = e.open}>
+    <button type="button" onclick={() => open = true} class="btn preset-filled bg-fuchsia-800 text-white">
         Review
-    </Dialog.Trigger>
+    </button>
     <Portal>
         <!-- Backdrop with fade -->
         <Dialog.Backdrop>
