@@ -120,11 +120,16 @@ def image_metadata(filename: Path) -> Optional[Dict[str, Any]]:
 
 def to_int(data: Dict[str, Any], key: str) -> Optional[int]:
     value = data.get(key)
-    if value is not None:
-        try:
-            return TypeAdapter(int).validate_strings(str(value)) if value is not None else None
-        except (ValueError, TypeError):
-            logger.warning(f"Expected integer for key '{key}', got {value} in file {data.get('filename')}")
+    if value is None:
+        return None
+    if isinstance(value, list):
+        value = value[0] if value else None
+    if value is None:
+        return None
+    try:
+        return TypeAdapter(int).validate_strings(str(value))
+    except (ValueError, TypeError, Exception):
+        logger.warning(f"Expected integer for key '{key}', got {value!r} in file {data.get('filename')}")
     return None
 
 
@@ -178,9 +183,9 @@ async def save_generation(session: AsyncSession, data: Dict[str, Any], filename:
     model.negative_prompt = ", ".join(data.get("negative_prompts") or [])
     model.styles = ", ".join(data.get("styles") or [])
     model.cfg = data.get("cfg")
-    model.steps = int(data["steps"]) if data.get("steps") is not None else None
+    model.steps = to_int(data, "steps")
     model.scheduler = data.get("scheduler")
-    model.seed = int(data.get("seed") or 0) if data.get("seed") is not None else None
+    model.seed = to_int(data, "seed")
     model.image_id = image.id
 
     session.add(model)
