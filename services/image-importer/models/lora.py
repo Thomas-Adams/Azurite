@@ -5,13 +5,13 @@ from models.base import Base, EntityBaseMixin
 
 
 class Lora(EntityBaseMixin, Base):
-    __table__ = "loras"
+    __tablename__ = "lora"
     __table_args__ = (
         {"schema": "pony_image"},
     )
     generation_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("pony_image.generation.id"),
+        ForeignKey("pony_image.generation.id", name="fk_lora_generation_id"),
         nullable=False,
     )
     name: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -4,14 +4,14 @@ from sqlalchemy.orm import Mapped, mapped_column
 from models.base import Base, EntityBaseMixin
 
 
-class Lora(EntityBaseMixin, Base):
-    __table__ = "lora_image"
+class LoraImage(EntityBaseMixin, Base):
+    __tablename__ = "lora_image"
     __table_args__ = (
         {"schema": "pony_image"},
     )
     lora_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("pony_image.lora.id"),
+        ForeignKey("pony_image.lora.id", name="fk_lora_image_lora_id"),
         nullable=False,
     )
     file_name: Mapped[str] = mapped_column(Text, nullable=False)

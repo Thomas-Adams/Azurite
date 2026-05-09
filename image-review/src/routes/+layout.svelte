@@ -16,7 +16,7 @@
         {
             title: 'Image import',
             icon: 'boxicons:image',
-            link: '/import',
+            link: '/view',
             attributes: {}
         },
         {
@@ -39,8 +39,9 @@
             </aside>
         </div>
         <main class="space-y-4  p-4">
+            {@render children()}
         </main>
     </div>
 </div>
 
-        {@render children()}
+

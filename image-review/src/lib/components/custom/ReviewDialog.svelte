@@ -1,0 +1,100 @@
+<script lang="ts">
+    import {XIcon} from '@lucide/svelte';
+    import {Dialog, Portal} from '@skeletonlabs/skeleton-svelte';
+    import {fly, fade} from 'svelte/transition';
+    import type {Review, ReviewDialogProps, ReviewResult} from '@/utils.js';
+
+    let {
+        handleReview, imageFile = null
+    }: ReviewDialogProps = $props();
+
+
+
+    let rating = $state<number>(3);
+    let comment = $state('');
+    let bucket = $state('');
+
+    async function handleReviewSubmit(): Promise<ReviewResult> {
+        if (!rating) return {success: false, errors: [{field: 'rating', message: 'Please select a rating'}]};
+        if (!imageFile) return {success: false, errors: [{field: '', message: 'Please select an image first'}]};
+        const review: Review = {
+            rating, comment, hash: imageFile.hash, path: imageFile.full_path, bucket_name: bucket,
+        }
+        return handleReview(review);
+    }
+</script>
+
+<Dialog>
+    <Dialog.Trigger class="btn preset-filled bg-fuchsia-800 text-white">
+        Review
+    </Dialog.Trigger>
+    <Portal>
+        <!-- Backdrop with fade -->
+        <Dialog.Backdrop>
+            {#snippet element(attributes)}
+                {#if !attributes.hidden}
+                    <div {...attributes} transition:fade={{ duration: 200 }}
+                         style="position:fixed; inset:0; z-index:9998; background:rgba(0,0,0,0.5);">
+                    </div>
+                {/if}
+            {/snippet}
+        </Dialog.Backdrop>
+
+        <!-- Positioner -->
+        <Dialog.Positioner style="position:fixed; inset:0; z-index:9999; display:flex; justify-content:flex-end;">
+            <!-- Content with fly from right -->
+            <Dialog.Content>
+                {#snippet element(attributes)}
+                    {#if !attributes.hidden}
+                        <div {...attributes}
+                             transition:fly={{ x: 320, duration: 250 }}
+                             style="height:100vh; width:320px; padding:1rem; background:var(--color-surface-100-900); box-shadow:-4px 0 24px rgba(0,0,0,0.3); overflow-y:auto;">
+
+                            <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <Dialog.Title>Review</Dialog.Title>
+                                <Dialog.CloseTrigger class="btn-icon preset-tonal">
+                                    <XIcon/>
+                                </Dialog.CloseTrigger>
+                            </header>
+
+                            <form class="space-y-4">
+                                <fieldset class="space-y-2">
+                                    <label class="flex items-center gap-2">
+                                        <input class="radio" type="radio" name="rating" bind:group={rating} value={3}/>
+                                        <span>Not acceptable</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input class="radio" type="radio" name="rating" bind:group={rating} value={2}/>
+                                        <span>Acceptable, flaws visible</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input class="radio" type="radio" name="rating" bind:group={rating} value={1}/>
+                                        <span>Very good, almost no flaws</span>
+                                    </label>
+                                </fieldset>
+                                <fieldset class="space-y-1">
+                                    <label for="comment">Bucket</label>
+                                    <input id="bucket" required class="input w-full" bind:value={bucket}
+                                           placeholder="Bucket name">
+                                </fieldset>
+                                <fieldset class="space-y-1">
+                                    <label for="comment">Additional comments</label>
+                                    <textarea id="comment" class="textarea w-full" rows="4" bind:value={comment}
+                                              placeholder="Additional comments"></textarea>
+                                </fieldset>
+                                <fieldset class="flex gap-2 justify-end">
+                                    <Dialog.CloseTrigger class="btn preset-filled bg-amber-900 text-white">
+                                        Cancel
+                                    </Dialog.CloseTrigger>
+                                    <button onclick={handleReviewSubmit} type="button" class="btn preset-filled bg-fuchsia-800 text-white">
+                                        Save
+                                    </button>
+                                </fieldset>
+                            </form>
+                        </div>
+                    {/if}
+                {/snippet}
+            </Dialog.Content>
+        </Dialog.Positioner>
+    </Portal>
+</Dialog>

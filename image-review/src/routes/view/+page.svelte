@@ -1,0 +1,270 @@
+<script lang="ts">
+    import {onMount, onDestroy} from 'svelte';
+    import Icon from '@iconify/svelte';
+    import {Carousel, Pagination} from '@skeletonlabs/skeleton-svelte';
+    import {flattenMeta, type ImageFile, type Paginated, type Review, type ReviewResult, type SortParam, toMetaArray} from '@/utils.js';
+    import ReviewDialog from '@/components/custom/ReviewDialog.svelte';
+
+    const iconSize = 32;
+    let reviewOpen = $state(false);
+    let slides = $state<ImageFile[]>([]);
+    let offset = $state(0);
+    let total = $state(0);
+    let loading = $state(false);
+    let hasMore = $state(true);
+    let currentPage = $state(1);
+    let currentSlide = $state(undefined);
+    let limit = $state(10);
+    let sort = $state('name' as SortParam);
+    let ws: WebSocket | null = null;
+    let total_pages = $state(0);
+    let currentBatch = $state<Paginated<ImageFile>>();
+    let queryParams = $state({});
+    let allLoaded = $derived(slides.length >= total && total > 0);
+    let currentFolder = $state('vorlagen-tsukuyomi/vorlagen-bilder')
+
+
+    const API = 'http://127.0.0.1:8000';
+    const BATCH = 10;
+
+    let slideIndex = $state(0);
+    let currentImage = $derived(currentBatch?.content?.[slideIndex] ?? null);
+    const EXCLUDED_META_KEYS = new Set(['raw', 'workflow', 'prompt_raw']);
+    let tableData = $derived(currentBatch?.content?.[slideIndex].meta ? flattenMeta(currentBatch?.content?.[slideIndex].meta, '', EXCLUDED_META_KEYS) : []);
+
+
+    async function fetchBatch(folder: string, page: number, size: number, sort: SortParam): Promise<Paginated<ImageFile> | null> {
+        if (loading || !hasMore) return null;
+        loading = true;
+        try {
+            const params = new URLSearchParams({
+                folder,
+                page: String(page),
+                size: String(size),
+                sort,
+            });
+            const response = await fetch(`${API}/api/fetch-image-batch?${params}`);
+            if (!response.ok) {
+                console.error('Failed to fetch images:', response.statusText);
+                return null;
+            }
+            const data: Paginated<ImageFile> = await response.json();
+
+            if (data) {
+                slides = [...slides, ...data.content];
+                currentBatch = data;
+                offset += data.content.length;
+                total = data.total;
+                total_pages = data.total_pages;
+                hasMore = page < data.total_pages;
+                queryParams = {'sort': sort};
+            }
+            return data
+        } catch (error) {
+            console.error('Error fetching images:', error);
+            return null;
+        } finally {
+            loading = false;
+        }
+    }
+
+    async function onPageChangeEvent(event: { page: number }) {
+        currentPage = event.page;
+        const alreadyLoaded = (event.page - 1) * BATCH < slides.length;
+        if (!alreadyLoaded && hasMore) {
+            await fetchBatch(currentFolder, event.page, BATCH, sort);
+        } else {
+            const start = (event.page - 1) * BATCH;
+            const end = start + BATCH;
+
+            currentBatch = {
+                size: BATCH,
+                page: event.page,
+                total: slides.length,
+                content: slides.slice(start, end),
+                total_pages,
+                params: queryParams,
+                has_next: event.page < total_pages,
+                has_prev: event.page > 1
+
+            } as Paginated<ImageFile>;
+            currentPage = event.page;
+            slideIndex = 0;
+        }
+    }
+
+    async function handleSubmit() {
+        slides = [];
+        offset = 0;
+        total = 0;
+        hasMore = true;
+        currentPage = 1;
+        await fetchBatch(currentFolder, currentPage, BATCH, sort);
+    }
+
+    onMount(async () => {
+        if (currentFolder) {
+            handleSubmit();
+        }
+    });
+
+    $effect(() => {
+        console.log('slideIndex:', slideIndex);
+        console.log('currentImage:', currentImage);
+        console.log('slides count:', slides.length);
+    });
+
+
+    async function postReview(review: Review): Promise<ReviewResult> {
+        const res = await fetch(`${API}/review`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(review),
+        });
+        return await res.json() as ReviewResult;
+    }
+
+</script>
+<div class="w-full flex justify-between">
+    {#if loading}
+        <div class="loading-overlay">
+            <div class="loading-spinner"></div>
+        </div>
+    {/if}
+    <form class="w-4/12  flex justify-start gap-2 space-y-1 p-2">
+        <input class="input h-8" type="text" placeholder="Choose folder " bind:value={currentFolder}/>
+        <button onclick={handleSubmit} type="button" class="btn bg-fuchsia-800 text-white h-8">Submit</button>
+    </form>
+    {#if currentImage }
+        <div class="w-3/12 flex justify-start gap-2 space-y-1 p-2 font-small">
+            <div class="image-data">
+                <span class="caption">Width :&nbsp;</span><span class="value">{currentImage.width}</span>
+            </div>
+            <div class="image-data">
+                <span class="caption">Height :&nbsp;</span><span class="value">{currentImage.height}</span>
+            </div>
+            <div class="image-data">
+                <span class="caption">Size :&nbsp;</span><span class="value">{(currentImage.size_bytes / 1024 / 1024).toFixed(1)} MB</span>
+            </div>
+        </div>
+    {/if}
+    <div class="w-2/12 flex justify-start gap-2 space-y-1 p-2 font-small">
+        <ReviewDialog handleReview={postReview} imageFile={currentImage}/>
+    </div>
+
+    {#if currentBatch && currentBatch.content && currentBatch.content.length > 0}
+        <Pagination count={currentBatch.total} pageSize={BATCH} page={currentPage} onPageChange={onPageChangeEvent} dir="rtl">
+            <Pagination.PrevTrigger>
+                <Icon icon={'mingcute:arrow-right-fill'} style="width:{iconSize} height={iconSize}"/>
+            </Pagination.PrevTrigger>
+            <Pagination.Context>
+                {#snippet children(pagination)}
+                    {#each pagination().pages as page, index (page)}
+                        {#if page.type === 'page'}
+                            <Pagination.Item {...page}>
+                                {page.value}
+                            </Pagination.Item>
+                        {:else}
+                            <Pagination.Ellipsis {index}>&#8230;</Pagination.Ellipsis>
+                        {/if}
+                    {/each}
+                {/snippet}
+            </Pagination.Context>
+            <Pagination.NextTrigger>
+                <Icon icon={'mingcute:arrow-left-fill'} style="width:{iconSize} height={iconSize}"/>
+            </Pagination.NextTrigger>
+        </Pagination>
+    {/if}
+</div>
+{#if currentBatch && currentBatch.content && currentBatch.content.length > 0}
+    <Carousel slideCount={currentBatch.content.length} slidesPerPage={1} spacing="16px" loop onPageChange={(event => slideIndex = event.page)}>
+        <div class="relative">
+            <Carousel.Control>
+                <Carousel.PrevTrigger class="btn-icon bg-fuchsia-800 preset-filled rounded-full absolute top-[50%] left-0 translate-y-[-50%]">
+                    <span>&larr;</span>
+                </Carousel.PrevTrigger>
+                <Carousel.NextTrigger class="btn-icon bg-fuchsia-800 preset-filled rounded-full absolute top-[50%] right-0 translate-y-[-50%]">
+                    <span>&rarr;</span>
+                </Carousel.NextTrigger>
+            </Carousel.Control>
+            <Carousel.ItemGroup>
+                {#each currentBatch.content as slide, i}
+                    <Carousel.Item index={i} class="card bg-black p-4 flex justify-center items-center">
+                        <img src={slide.url} alt={slide.filename} class="carousel-image">
+                    </Carousel.Item>
+                {/each}
+            </Carousel.ItemGroup>
+        </div>
+        <Carousel.IndicatorGroup>
+            <Carousel.Context>
+                {#snippet children(carousel)}
+                    {#each carousel().pageSnapPoints as _, index}
+                        <Carousel.Indicator {index}/>
+                    {/each}
+                {/snippet}
+            </Carousel.Context>
+        </Carousel.IndicatorGroup>
+    </Carousel>
+    <br>
+    <br>
+    <hr>
+    <br>
+    <div class="table-wrap">
+        <table class="table border-collapse border border-gray-400 caption-bottom">
+            <tbody class="[&>tr]:hover:preset-tonal-primary">
+                {#each tableData as meta}
+                    <tr class="align-top border border-gray-400">
+                        <td class="font-medium py-1 pr-4 whitespace-nowrap border border-gray-400">{meta.key}</td>
+                        <td class="py-1 break-all border border-gray-400">{typeof meta.value === 'object' && meta.value !== null
+                                ? JSON.stringify(meta.value)
+                                : String(meta.value ?? '')}</td>
+                    </tr>
+                {/each}
+            </tbody>
+        </table>
+    </div>
+
+{/if}
+
+<style>
+    .carousel-image {
+        height: 80vh;
+    }
+
+    .table-wrap table {
+        max-width: 100%;
+        overflow: auto;
+        max-height: 200vh;
+    }
+
+
+    :global(body.is-loading) {
+        cursor: wait;
+    }
+
+    .loading-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        cursor: wait;
+    }
+
+    .loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-top-color: #a21caf;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>

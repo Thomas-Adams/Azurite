@@ -6,14 +6,14 @@ from models.base import Base, EntityBaseMixin
 
 
 class Workflow(EntityBaseMixin, Base):
-    __tablename__ = "image_workflow"
+    __tablename__ = "workflow"
     __table_args__ = (
-        UniqueConstraint("image_id", name="image_generation_image_id"),
+        UniqueConstraint("image_id", name="workflow_image_id_uix"),
         {"schema": "pony_image"},
     )
     image_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("pony_image.image.id"),
+        ForeignKey("pony_image.image.id", name="fk_workflow_image_id"),
         nullable=False,
     )
     workflow: Mapped[dict | None] = mapped_column(JSONB, nullable=True)

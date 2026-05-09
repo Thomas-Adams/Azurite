@@ -1,7 +1,5 @@
 from fastapi import WebSocket, WebSocketDisconnect
-
-from api import app
-from api.state import jobs
+from api.state import jobs, app
 
 
 class ConnectionManager:

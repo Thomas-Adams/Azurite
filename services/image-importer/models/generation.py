@@ -7,12 +7,12 @@ from models.base import Base, EntityBaseMixin
 class Generation(EntityBaseMixin, Base):
     __tablename__ = "generation"
     __table_args__ = (
-        UniqueConstraint("image_id", name="generation_image_id"),
+        UniqueConstraint("image_id", name="generation_image_id_uix"),
         {"schema": "pony_image"},
     )
     image_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("pony_image.image.id"),
+        ForeignKey("pony_image.image.id", name="fk_generation_image_id"),
         nullable=False,
     )
     positive_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)

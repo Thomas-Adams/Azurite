@@ -13,10 +13,9 @@ from models.base import Base, EntityBaseMixin
 class Image(EntityBaseMixin, Base):
     __tablename__ = "image"
     __table_args__ = (
-        UniqueConstraint("sha256", name="image_assets_sha256_unique"),
-        CheckConstraint("quality_rating between 0 and 5", name="image_assets_quality_rating_chk"),
-        CheckConstraint("width > 0", name="image_assets_width_chk"),
-        CheckConstraint("height > 0", name="image_assets_height_chk"),
+        UniqueConstraint("sha256", name="image_sha256_uix"),
+        CheckConstraint("width > 0", name="image_width_chk"),
+        CheckConstraint("height > 0", name="image_height_chk"),
         {"schema": "pony_image"},
     )
     file_name: Mapped[str] = mapped_column(Text, nullable=False)
