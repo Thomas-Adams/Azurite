@@ -136,7 +136,9 @@
                 <span class="caption">Size :&nbsp;</span><span class="value">{(currentImage.size_bytes / 1024 / 1024).toFixed(1)} MB</span>
             </div>
             {#if currentImage.already_reviewed}
-                <span class="badge-reviewed" class:badge-rejected={currentImage.review_rating === 3}>
+                <span class="badge-reviewed"
+                    class:badge-flawed={currentImage.review_rating === 2}
+                    class:badge-rejected={currentImage.review_rating === 3}>
                     {currentImage.review_rating === 3 ? '✕ Not acceptable' : '✓ Reviewed'}
                 </span>
             {/if}
@@ -187,7 +189,9 @@
                         <div class="relative inline-block">
                             <img src={slide.url} alt={slide.filename} class="carousel-image">
                             {#if slide.already_reviewed}
-                                <span class="badge-reviewed-overlay" class:badge-rejected-overlay={slide.review_rating === 3}>
+                                <span class="badge-reviewed-overlay"
+                                    class:badge-flawed-overlay={slide.review_rating === 2}
+                                    class:badge-rejected-overlay={slide.review_rating === 3}>
                                     {slide.review_rating === 3 ? '✕ Not acceptable' : '✓ Reviewed'}
                                 </span>
                             {/if}
@@ -245,6 +249,10 @@
         white-space: nowrap;
     }
 
+    .badge-flawed {
+        background: #ca8a04;
+    }
+
     .badge-rejected {
         background: #dc2626;
     }
@@ -264,6 +272,10 @@
         font-weight: 700;
         backdrop-filter: blur(4px);
         pointer-events: none;
+    }
+
+    .badge-flawed-overlay {
+        background: rgba(202, 138, 4, 0.9);
     }
 
     .badge-rejected-overlay {
