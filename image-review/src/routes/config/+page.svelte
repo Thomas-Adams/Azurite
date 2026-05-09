@@ -3,9 +3,12 @@
 
     interface AppSettings {
         image_root: string;
+        buckets: string[];
     }
 
     let imageRoot = $state('');
+    let buckets = $state<string[]>([]);
+    let newBucket = $state('');
     let loading = $state(true);
     let saving = $state(false);
     let savedOk = $state(false);
@@ -17,6 +20,7 @@
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data: AppSettings = await res.json();
             imageRoot = data.image_root;
+            buckets = data.buckets ?? [];
         } catch (e) {
             error = `Failed to load settings: ${e}`;
         } finally {
@@ -32,7 +36,7 @@
             const res = await fetch(`${API}/api/settings`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image_root: imageRoot }),
+                body: JSON.stringify({ image_root: imageRoot, buckets }),
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             savedOk = true;
@@ -42,6 +46,17 @@
         } finally {
             saving = false;
         }
+    }
+
+    function addBucket() {
+        const name = newBucket.trim();
+        if (!name || buckets.includes(name)) return;
+        buckets = [...buckets, name];
+        newBucket = '';
+    }
+
+    function removeBucket(name: string) {
+        buckets = buckets.filter(b => b !== name);
     }
 
     $effect(() => { load(); });
@@ -68,6 +83,35 @@
                     placeholder="/mnt/windows/stablediffusion"
                     required
                 />
+            </div>
+
+            <div class="config-field">
+                <span class="config-label">
+                    MinIO buckets
+                    <span class="config-hint">Buckets available for selection when submitting a review</span>
+                </span>
+                <ul class="bucket-list">
+                    {#each buckets as bucket}
+                        <li class="bucket-item">
+                            <span class="font-mono text-sm">{bucket}</span>
+                            <button type="button" class="bucket-remove" onclick={() => removeBucket(bucket)}
+                                    aria-label="Remove {bucket}">✕</button>
+                        </li>
+                    {/each}
+                    {#if buckets.length === 0}
+                        <li class="text-gray-500 text-sm italic">No buckets configured</li>
+                    {/if}
+                </ul>
+                <div class="flex gap-2 mt-2">
+                    <input
+                        class="input h-8 font-mono text-sm flex-1"
+                        type="text"
+                        placeholder="bucket-name"
+                        bind:value={newBucket}
+                        onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addBucket(); } }}
+                    />
+                    <button type="button" class="btn bg-fuchsia-800 text-white h-8" onclick={addBucket}>Add</button>
+                </div>
             </div>
 
             <div class="flex items-center gap-3">
@@ -106,5 +150,38 @@
         font-size: 0.75rem;
         font-weight: 400;
         color: #64748b;
+    }
+
+    .bucket-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .bucket-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.3rem 0.6rem;
+        border-radius: 0.375rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .bucket-remove {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        padding: 0 0.25rem;
+        line-height: 1;
+    }
+
+    .bucket-remove:hover {
+        color: #f87171;
     }
 </style>

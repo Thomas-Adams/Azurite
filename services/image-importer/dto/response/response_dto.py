@@ -18,4 +18,5 @@ class ReviewResultDto(BaseModel):
 
 class SettingsDto(BaseModel):
     image_root: str
+    buckets: list[str] = []
 

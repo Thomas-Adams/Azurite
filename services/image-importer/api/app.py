@@ -305,10 +305,16 @@ async def review_image(dto: ReviewDto) -> ReviewResultDto:
 @app.get("/api/settings", response_model=SettingsDto)
 async def read_settings() -> SettingsDto:
     row = await get_settings()
-    return SettingsDto(image_root=row.image_root)
+    return SettingsDto(image_root=row.image_root, buckets=row.buckets or [])
 
 
 @app.put("/api/settings", response_model=SettingsDto)
 async def write_settings(dto: SettingsDto) -> SettingsDto:
-    row = await update_settings(image_root=dto.image_root)
-    return SettingsDto(image_root=row.image_root)
+    row = await update_settings(image_root=dto.image_root, buckets=dto.buckets)
+    return SettingsDto(image_root=row.image_root, buckets=row.buckets or [])
+
+
+@app.get("/api/buckets", response_model=list[str])
+async def list_buckets() -> list[str]:
+    row = await get_settings()
+    return row.buckets or []

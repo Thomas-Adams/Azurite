@@ -10,10 +10,25 @@
 
 
 
+    const API = 'http://127.0.0.1:8000';
+
     let open = $state(false);
     let rating = $state<number>(3);
     let comment = $state('');
     let bucket = $state('');
+    let bucketOptions = $state<string[]>([]);
+
+    $effect(() => {
+        if (open && bucketOptions.length === 0) {
+            fetch(`${API}/api/buckets`)
+                .then(r => r.json())
+                .then((list: string[]) => {
+                    bucketOptions = list;
+                    if (list.length > 0 && !bucket) bucket = list[0];
+                })
+                .catch(() => {});
+        }
+    });
 
     async function handleReviewSubmit(): Promise<ReviewResult> {
         if (!rating) return {success: false, errors: [{field: 'rating', message: 'Please select a rating'}]};
@@ -76,9 +91,17 @@
                                     </label>
                                 </fieldset>
                                 <fieldset class="space-y-1">
-                                    <label for="comment">Bucket</label>
-                                    <input id="bucket" required class="input w-full" bind:value={bucket}
-                                           placeholder="Bucket name">
+                                    <label for="bucket">Bucket</label>
+                                    {#if bucketOptions.length > 0}
+                                        <select id="bucket" class="select w-full" bind:value={bucket}>
+                                            {#each bucketOptions as opt}
+                                                <option value={opt}>{opt}</option>
+                                            {/each}
+                                        </select>
+                                    {:else}
+                                        <input id="bucket" class="input w-full" bind:value={bucket}
+                                               placeholder="Bucket name (none configured)"/>
+                                    {/if}
                                 </fieldset>
                                 <fieldset class="space-y-1">
                                     <label for="comment">Additional comments</label>
