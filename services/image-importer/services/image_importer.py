@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from pydantic import TypeAdapter
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.state import IMAGE_ROOT
@@ -221,6 +222,16 @@ async def save_review(session: AsyncSession, dto: ReviewDto, filename: Path, ima
     await session.flush()  # gets PK from DB without committing yet
     await session.refresh(review)
     return review
+
+
+async def get_reviewed_hashes(hashes: list[str]) -> set[str]:
+    if not hashes:
+        return set()
+    async with async_session_factory() as session:
+        result = await session.execute(
+            select(Storage.sha256).where(Storage.sha256.in_(hashes))
+        )
+        return {row[0] for row in result}
 
 
 async def import_one(parsed: dict):

@@ -18,7 +18,7 @@ class Storage(EntityBaseMixin, Base):
         ForeignKey("pony_image.image.id", name="fk_storage_image_id"),
         nullable=False,
     )
-    sha256: Mapped[str] = mapped_column(CHAR(64), nullable=False)
+    sha256: Mapped[str] = mapped_column(CHAR(64), nullable=False, index=True)
     search: Mapped[str | None] = mapped_column(TSVECTOR, nullable=True)
     url: Mapped[str | None] = mapped_column(Text, nullable=True)
     bucket: Mapped[str | None] = mapped_column(Text, nullable=True)

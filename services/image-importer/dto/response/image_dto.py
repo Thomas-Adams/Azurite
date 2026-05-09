@@ -13,3 +13,4 @@ class ImageFileDto(BaseModel):
     meta: dict | None
     modified_at: datetime
     hash: str
+    already_reviewed: bool = False

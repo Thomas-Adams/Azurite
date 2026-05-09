@@ -18,7 +18,7 @@ from dto.request.request_dto import ReviewDto, ScanImagesRequestDto
 from dto.response.image_dto import ImageFileDto
 from dto.response.paginate import Paginated
 from dto.response.response_dto import ErrorMessageDto, ReviewResultDto, StartedJobResponseDto
-from services.image_importer import image_metadata, read_png_metadata, read_png_sidecar, import_one, upload_and_review_image
+from services.image_importer import image_metadata, read_png_metadata, read_png_sidecar, import_one, upload_and_review_image, get_reviewed_hashes
 from utils.image_sha import sha256_of_file
 from utils.image_utils import read_image_size
 
@@ -207,13 +207,12 @@ async def import_images(paths: list[str]):
 
 
 @app.get("/api/fetch-image-batch")
-def fetch_image_batch(
+async def fetch_image_batch(
         folder: str = Query(..., description="Relative path beyond IMAGE_ROOT"),
         page: int = Query(1, ge=1),
         size: int = Query(10, ge=1, le=100),
         sort: str = Query("name", pattern="^(name|size|date)$"),
 ):
-    # Resolve and guard against path traversal
     abs_path = os.path.realpath(os.path.join(IMAGE_ROOT, folder.lstrip("/")))
     root = os.path.realpath(IMAGE_ROOT)
     if not abs_path.startswith(str(root)):
@@ -221,13 +220,11 @@ def fetch_image_batch(
     if not os.path.isdir(abs_path):
         raise HTTPException(status_code=404, detail="Folder not found")
 
-    # Collect all image files
     all_files = [
         entry for entry in os.scandir(abs_path)
         if entry.is_file() and os.path.splitext(entry.name)[1].lower() in ALLOWED_EXTENSIONS
     ]
 
-    # Sort
     sort_keys = {
         "name": lambda e: e.name.lower(),
         "size": lambda e: e.stat().st_size,
@@ -235,11 +232,13 @@ def fetch_image_batch(
     }
     all_files.sort(key=sort_keys[sort])
 
-    # Paginate
     total = len(all_files)
-    total_pages = max(1, -(-total // size))  # ceiling division
+    total_pages = max(1, -(-total // size))
     offset = (page - 1) * size
     page_files = all_files[offset: offset + size]
+
+    hashes = [sha256_of_file(entry.path) for entry in page_files]
+    reviewed = await get_reviewed_hashes(hashes)
 
     return Paginated[ImageFileDto](
         page=page,
@@ -256,12 +255,13 @@ def fetch_image_batch(
                 url=f"{BASE_URL}/file?path={entry.path}",
                 full_path=entry.path,
                 size_bytes=entry.stat().st_size,
-                hash=sha256_of_file(entry.path),
+                hash=h,
+                already_reviewed=h in reviewed,
                 meta=image_metadata(Path(entry.path)),
                 modified_at=datetime.fromtimestamp(entry.stat().st_mtime, tz=timezone.utc),
                 **dict(zip(("width", "height"), read_image_size(entry.path))),
             )
-            for i, entry in enumerate(page_files, start=offset)
+            for i, (entry, h) in enumerate(zip(page_files, hashes), start=offset)
         ])
 
 
