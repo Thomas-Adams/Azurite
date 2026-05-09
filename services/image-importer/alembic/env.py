@@ -11,6 +11,7 @@ from models.lora import Lora
 from models.lora_image import LoraImage
 from models.meta_data import MetaData
 from models.review import Review
+from models.settings import Settings
 from models.storage import Storage
 from models.workflow import Workflow
 
