@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import mimetypes
 import os
 from datetime import UTC, datetime, timezone
@@ -13,13 +14,15 @@ from starlette.responses import FileResponse
 import api.state as state
 from api.state import app, ALLOWED_EXTENSIONS, STATIC_FOLDERS, IMAGE_ROOT
 from api.tasks import run_scan
-from dto.request.request_dto import ScanImagesRequestDto
+from dto.request.request_dto import ReviewDto, ScanImagesRequestDto
 from dto.response.image_dto import ImageFileDto
 from dto.response.paginate import Paginated
-from dto.response.response_dto import StartedJobResponseDto
-from services.image_importer import image_metadata, read_png_metadata, read_png_sidecar, import_one
+from dto.response.response_dto import ErrorMessageDto, ReviewResultDto, StartedJobResponseDto
+from services.image_importer import image_metadata, read_png_metadata, read_png_sidecar, import_one, upload_and_review_image
 from utils.image_sha import sha256_of_file
 from utils.image_utils import read_image_size
+
+logger = logging.getLogger(__name__)
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
@@ -261,3 +264,14 @@ def fetch_image_batch(
             for i, entry in enumerate(page_files, start=offset)
         ])
 
+
+# ── review route ──────────────────────────────────────────────────────────────
+
+@app.post("/review", response_model=ReviewResultDto)
+async def review_image(dto: ReviewDto) -> ReviewResultDto:
+    try:
+        await upload_and_review_image(dto)
+        return ReviewResultDto(success=True)
+    except Exception as e:
+        logger.error("Review failed", exc_info=True)
+        return ReviewResultDto(success=False, errors=[ErrorMessageDto(message=str(e))])
