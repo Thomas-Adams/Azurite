@@ -20,6 +20,7 @@ from models.lora import Lora
 from models.meta_data import MetaData
 from models.review import Review
 from models.storage import Storage
+from search.indexer import index_review
 from utils import get_created
 from utils.excerpt_parser import extract_comfyui_essentials
 from utils.image_sha import sha256_of_file
@@ -293,6 +294,9 @@ async def upload_and_review_image(review_dto: ReviewDto):
             data.update({"url": url})
             storage = await  save_storage(session, data, image_path, model_image)
             await session.commit()
+
+            index_review(model_image, model_generation, loras, review, storage)
+
             return (
                 model_image,
                 model_generation,

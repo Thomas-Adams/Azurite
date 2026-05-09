@@ -18,6 +18,7 @@ from dto.request.request_dto import ReviewDto, ScanImagesRequestDto
 from dto.response.image_dto import ImageFileDto
 from dto.response.paginate import Paginated
 from dto.response.response_dto import ErrorMessageDto, ReviewResultDto, StartedJobResponseDto
+from search.client import get_index
 from services.image_importer import image_metadata, read_png_metadata, read_png_sidecar, import_one, upload_and_review_image, get_reviewed_hashes
 from utils.image_sha import sha256_of_file
 from utils.image_utils import read_image_size
@@ -263,6 +264,24 @@ async def fetch_image_batch(
             )
             for i, (entry, h) in enumerate(zip(page_files, hashes), start=offset)
         ])
+
+
+# ── search route ─────────────────────────────────────────────────────────────
+
+@app.get("/api/search")
+def search_images(
+        q: str = Query(..., min_length=1),
+        limit: int = Query(20, ge=1, le=100),
+        offset: int = Query(0, ge=0),
+):
+    result = get_index().search(q, {"limit": limit, "offset": offset})
+    return {
+        "query": q,
+        "total": result["estimatedTotalHits"],
+        "offset": offset,
+        "limit": limit,
+        "hits": result["hits"],
+    }
 
 
 # ── review route ──────────────────────────────────────────────────────────────

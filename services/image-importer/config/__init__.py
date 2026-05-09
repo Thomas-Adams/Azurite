@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     minio_access_key: str = "minioadmin"
     minio_secret_key: str = "minioadmin"
     minio_bucket: str = "tsukuyomi"
+    meili_host: str = "http://localhost:7700"
+    meili_api_key: str = ""
+    meili_index: str = "images"
 
     @property
     def database_url(self) -> str:
