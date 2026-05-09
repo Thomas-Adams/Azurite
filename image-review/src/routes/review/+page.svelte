@@ -38,10 +38,13 @@
     interface Toast { id: number; message: string; type: 'success' | 'error'; }
     let toasts = $state<Toast[]>([]);
 
+    function dismissToast(id: number) { toasts = toasts.filter(t => t.id !== id); }
+
     function showToast(message: string, type: 'success' | 'error') {
         const id = Date.now();
         toasts = [...toasts, { id, message, type }];
-        setTimeout(() => { toasts = toasts.filter(t => t.id !== id); }, 4000);
+        if (type === 'success') setTimeout(() => dismissToast(id), 4000);
+        // errors stay until manually dismissed
     }
     const EXCLUDED_META_KEYS = new Set(['raw', 'workflow', 'prompt_raw']);
     let tableData = $derived(currentBatch?.content?.[slideIndex].meta ? flattenMeta(currentBatch?.content?.[slideIndex].meta, '', EXCLUDED_META_KEYS) : []);
@@ -276,7 +279,8 @@
         {#each toasts as toast (toast.id)}
             <div class="toast" class:toast-success={toast.type === 'success'} class:toast-error={toast.type === 'error'}>
                 <span>{toast.type === 'success' ? '✓' : '✕'}</span>
-                {toast.message}
+                <span class="toast-message">{toast.message}</span>
+                <button class="toast-dismiss" onclick={() => dismissToast(toast.id)} aria-label="Dismiss">✕</button>
             </div>
         {/each}
     </div>
@@ -378,7 +382,7 @@
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
-        pointer-events: none;
+        pointer-events: none; /* toasts set pointer-events: all individually */
     }
 
     .toast {
@@ -392,6 +396,28 @@
         color: #fff;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
         animation: toast-in 0.2s ease;
+        pointer-events: all;
+        max-width: 420px;
+    }
+
+    .toast-message {
+        flex: 1;
+        word-break: break-word;
+    }
+
+    .toast-dismiss {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.7);
+        cursor: pointer;
+        font-size: 0.75rem;
+        padding: 0 0.1rem;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    .toast-dismiss:hover {
+        color: #fff;
     }
 
     .toast-success { background: #16a34a; }

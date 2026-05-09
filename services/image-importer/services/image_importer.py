@@ -155,11 +155,11 @@ async def save_image(session: AsyncSession, data: Dict[str, Any], filename: Path
     model.path = str(filename.parent)
     model.mimetype = "image/png"
 
-    width = to_int(data, "image_width") or 0
-    height = to_int(data, "image_height") or 0
+    width = to_int(data, "image_width") or data.get("width") or 0
+    height = to_int(data, "image_height") or data.get("height") or 0
     model.width = width
     model.height = height
-    model.aspect_ratio = (width / height) if (width is not None and height not in (None, 0)) else None
+    model.aspect_ratio = (width / height) if height else None
 
     model.file_size = os.path.getsize(filename)
     model.sha256 = sha256_of_file(str(filename))
