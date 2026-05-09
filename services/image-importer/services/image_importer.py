@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.state import IMAGE_ROOT
 from database import async_session_factory
 from dto.request.request_dto import ReviewDto
-from minio.config import minio_client
+from storage.config import minio_client
 from models.generation import Generation
 from models.image import Image as ModelImage
 from models.lora import Lora
@@ -48,7 +48,7 @@ def read_png_metadata(filename: Path) -> Optional[Dict[str, Any]]:
             extracted = extract_comfyui_essentials({"prompt": prompt})
             return {"filename": filename, "raw": raw, "workflow": workflow, **extracted}
         return None
-    except FileNotFoundError | AttributeError | IOError:
+    except (FileNotFoundError, AttributeError, IOError):
         logger.error(f"Error processing image metadata: {filename}")
         return None
 
@@ -69,9 +69,9 @@ def image_metadata(filename: Path) -> Optional[Dict[str, Any]]:
         sidecar = None
         img = Image.open(filename)
         raw = img.info or {}
-        workflow_raw = str(raw.get("workflow")) if raw is not None else None
-        prompt_raw = str(raw.get("prompt")) if raw is not None else None
-        workflow = json.loads(workflow_raw) if workflow_raw is not None else None
+        workflow_raw = raw.get("workflow") if raw else None
+        prompt_raw = raw.get("prompt") if raw else None
+        workflow = json.loads(workflow_raw) if workflow_raw else None
         parsed = json.loads(prompt_raw) if prompt_raw else None
         prompt: dict[str, Any] | None = parsed if isinstance(parsed, dict) else None
         size = os.path.getsize(filename)
@@ -87,7 +87,7 @@ def image_metadata(filename: Path) -> Optional[Dict[str, Any]]:
                 result["sidecar"] = sidecar
                 result.update(**side_extracted)
         return result
-    except FileNotFoundError | AttributeError | IOError:
+    except (FileNotFoundError, AttributeError, IOError):
         logger.error(f"Error processing image metadata: {filename}")
         return None
 
