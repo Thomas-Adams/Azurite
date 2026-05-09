@@ -139,10 +139,16 @@
 
             if (result.success) {
                 showToast('Review saved successfully', 'success');
-                // Update badge immediately without waiting for the next batch fetch
+                // Update badge on the current batch view
                 if (currentBatch && slideIndex < currentBatch.content.length) {
                     currentBatch.content[slideIndex].already_reviewed = true;
                     currentBatch.content[slideIndex].review_rating = review.rating;
+                }
+                // Also update the persistent slides array so re-visiting this page retains the badge
+                const slidesIdx = (currentPage - 1) * BATCH + slideIndex;
+                if (slidesIdx < slides.length) {
+                    slides[slidesIdx].already_reviewed = true;
+                    slides[slidesIdx].review_rating = review.rating;
                 }
             } else {
                 const msg = result.errors?.[0]?.message ?? 'Review failed';
