@@ -14,3 +14,4 @@ class ImageFileDto(BaseModel):
     modified_at: datetime
     hash: str
     already_reviewed: bool = False
+    review_rating: int | None = None

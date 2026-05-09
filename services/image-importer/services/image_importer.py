@@ -226,14 +226,18 @@ async def save_review(session: AsyncSession, dto: ReviewDto, filename: Path, ima
     return review
 
 
-async def get_reviewed_hashes(hashes: list[str]) -> set[str]:
+async def get_reviewed_hash_ratings(hashes: list[str]) -> dict[str, int | None]:
+    """Returns {sha256: rating} for all hashes that have been reviewed."""
     if not hashes:
-        return set()
+        return {}
     async with async_session_factory() as session:
         result = await session.execute(
-            select(Storage.sha256).where(Storage.sha256.in_(hashes))
+            select(Storage.sha256, Review.rating)
+            .join(ModelImage, ModelImage.id == Storage.image_id)
+            .join(Review, Review.image_id == ModelImage.id)
+            .where(Storage.sha256.in_(hashes))
         )
-        return {row[0] for row in result}
+        return {row[0]: row[1] for row in result}
 
 
 async def import_one(parsed: dict):

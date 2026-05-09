@@ -19,7 +19,7 @@ from dto.response.image_dto import ImageFileDto
 from dto.response.paginate import Paginated
 from dto.response.response_dto import ErrorMessageDto, ReviewResultDto, StartedJobResponseDto
 from search.client import get_index
-from services.image_importer import image_metadata, read_png_metadata, read_png_sidecar, import_one, upload_and_review_image, get_reviewed_hashes
+from services.image_importer import image_metadata, read_png_metadata, read_png_sidecar, import_one, upload_and_review_image, get_reviewed_hash_ratings
 from utils.image_sha import sha256_of_file
 from utils.image_utils import read_image_size
 
@@ -239,7 +239,7 @@ async def fetch_image_batch(
     page_files = all_files[offset: offset + size]
 
     hashes = [sha256_of_file(entry.path) for entry in page_files]
-    reviewed = await get_reviewed_hashes(hashes)
+    reviewed = await get_reviewed_hash_ratings(hashes)
 
     return Paginated[ImageFileDto](
         page=page,
@@ -258,6 +258,7 @@ async def fetch_image_batch(
                 size_bytes=entry.stat().st_size,
                 hash=h,
                 already_reviewed=h in reviewed,
+                review_rating=reviewed.get(h),
                 meta=image_metadata(Path(entry.path)),
                 modified_at=datetime.fromtimestamp(entry.stat().st_mtime, tz=timezone.utc),
                 **dict(zip(("width", "height"), read_image_size(entry.path))),

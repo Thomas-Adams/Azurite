@@ -37,6 +37,7 @@ export interface ImageFile {
     size_bytes: number;
     hash: string;
     already_reviewed: boolean;
+    review_rating: number | null;
     meta: JsonObject;
     modified_at: Date
 }
