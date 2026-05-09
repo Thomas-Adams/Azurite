@@ -15,3 +15,7 @@ class ReviewResultDto(BaseModel):
     success: bool
     errors: list[ErrorMessageDto] = []
 
+
+class SettingsDto(BaseModel):
+    image_root: str
+

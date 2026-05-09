@@ -10,6 +10,7 @@
         { title: 'Home', icon: 'material-symbols:home', link: '/' },
         { title: 'Review', icon: 'pajamas:review-checkmark', link: '/review' },
         { title: 'Search', icon: 'material-symbols:search', link: '/search' },
+        { title: 'Configuration', icon: 'material-symbols:settings', link: '/config' },
     ]
 </script>
 <svelte:head>

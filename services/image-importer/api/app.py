@@ -12,12 +12,13 @@ from starlette.exceptions import HTTPException
 from starlette.responses import FileResponse
 
 import api.state as state
-from api.state import app, ALLOWED_EXTENSIONS, STATIC_FOLDERS, IMAGE_ROOT
+from api.state import app, ALLOWED_EXTENSIONS, STATIC_FOLDERS
 from api.tasks import run_scan
 from dto.request.request_dto import ReviewDto, ScanImagesRequestDto
 from dto.response.image_dto import ImageFileDto
 from dto.response.paginate import Paginated
-from dto.response.response_dto import ErrorMessageDto, ReviewResultDto, StartedJobResponseDto
+from dto.response.response_dto import ErrorMessageDto, ReviewResultDto, SettingsDto, StartedJobResponseDto
+from services.settings_service import get_settings, update_settings
 from search.client import get_index
 from services.image_importer import image_metadata, read_png_metadata, read_png_sidecar, import_one, upload_and_review_image, get_reviewed_hash_ratings
 from utils.image_sha import sha256_of_file
@@ -214,8 +215,10 @@ async def fetch_image_batch(
         size: int = Query(10, ge=1, le=100),
         sort: str = Query("name", pattern="^(name|size|date)$"),
 ):
-    abs_path = os.path.realpath(os.path.join(IMAGE_ROOT, folder.lstrip("/")))
-    root = os.path.realpath(IMAGE_ROOT)
+    current_settings = await get_settings()
+    image_root = current_settings.image_root
+    abs_path = os.path.realpath(os.path.join(image_root, folder.lstrip("/")))
+    root = os.path.realpath(image_root)
     if not abs_path.startswith(str(root)):
         raise HTTPException(status_code=403, detail="Path outside IMAGE_ROOT")
     if not os.path.isdir(abs_path):
@@ -295,3 +298,17 @@ async def review_image(dto: ReviewDto) -> ReviewResultDto:
     except Exception as e:
         logger.error("Review failed", exc_info=True)
         return ReviewResultDto(success=False, errors=[ErrorMessageDto(message=str(e))])
+
+
+# ── settings routes ───────────────────────────────────────────────────────────
+
+@app.get("/api/settings", response_model=SettingsDto)
+async def read_settings() -> SettingsDto:
+    row = await get_settings()
+    return SettingsDto(image_root=row.image_root)
+
+
+@app.put("/api/settings", response_model=SettingsDto)
+async def write_settings(dto: SettingsDto) -> SettingsDto:
+    row = await update_settings(image_root=dto.image_root)
+    return SettingsDto(image_root=row.image_root)
