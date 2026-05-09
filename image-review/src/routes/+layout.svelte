@@ -8,7 +8,6 @@
 
     const navItems: NavItem[] = [
         { title: 'Home', icon: 'material-symbols:home', link: '/' },
-        { title: 'Image import', icon: 'boxicons:image', link: '/view' },
         { title: 'Review', icon: 'pajamas:review-checkmark', link: '/review' },
         { title: 'Search', icon: 'material-symbols:search', link: '/search' },
     ]

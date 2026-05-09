@@ -12,3 +12,7 @@
     background-color: var(--color-surface-50-950);
     color: var(--color-surface-950-50);
 }
+
+div[data-layout="rail"] {
+    justify-content: start;
+}
