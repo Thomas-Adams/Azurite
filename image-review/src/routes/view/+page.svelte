@@ -125,7 +125,7 @@
         <button onclick={handleSubmit} type="button" class="btn bg-fuchsia-800 text-white h-8">Submit</button>
     </form>
     {#if currentImage }
-        <div class="w-3/12 flex justify-start gap-2 space-y-1 p-2 font-small">
+        <div class="w-3/12 flex justify-start gap-2 space-y-1 p-2 font-small items-center flex-wrap">
             <div class="image-data">
                 <span class="caption">Width :&nbsp;</span><span class="value">{currentImage.width}</span>
             </div>
@@ -135,6 +135,9 @@
             <div class="image-data">
                 <span class="caption">Size :&nbsp;</span><span class="value">{(currentImage.size_bytes / 1024 / 1024).toFixed(1)} MB</span>
             </div>
+            {#if currentImage.already_reviewed}
+                <span class="badge-reviewed">✓ Reviewed</span>
+            {/if}
         </div>
     {/if}
     <div class="w-2/12 flex justify-start gap-2 space-y-1 p-2 font-small">
@@ -179,7 +182,12 @@
             <Carousel.ItemGroup>
                 {#each currentBatch.content as slide, i}
                     <Carousel.Item index={i} class="card bg-black p-4 flex justify-center items-center">
-                        <img src={slide.url} alt={slide.filename} class="carousel-image">
+                        <div class="relative inline-block">
+                            <img src={slide.url} alt={slide.filename} class="carousel-image">
+                            {#if slide.already_reviewed}
+                                <span class="badge-reviewed-overlay">✓ Reviewed</span>
+                            {/if}
+                        </div>
                     </Carousel.Item>
                 {/each}
             </Carousel.ItemGroup>
@@ -218,6 +226,36 @@
 <style>
     .carousel-image {
         height: 80vh;
+    }
+
+    .badge-reviewed {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.15rem 0.6rem;
+        border-radius: 9999px;
+        background: #16a34a;
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .badge-reviewed-overlay {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        background: rgba(22, 163, 74, 0.9);
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 700;
+        backdrop-filter: blur(4px);
+        pointer-events: none;
     }
 
     .table-wrap table {
