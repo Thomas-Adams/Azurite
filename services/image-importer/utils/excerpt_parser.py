@@ -20,9 +20,14 @@ def _find_by_title_contains(nodes: Dict[str, Dict[str, Any]], needle: str) -> Li
 
 
 def _node_text(node: Dict[str, Any]) -> str:
-    """Return the text content of a prompt node, checking both 'value' and 'text' keys."""
+    """Return the text content of a prompt node, checking 'value' and 'text' keys.
+    Skips node references (lists) — only returns plain string values."""
     inputs = node.get("inputs", {})
-    return inputs.get("value") or inputs.get("text") or ""
+    for key in ("value", "text"):
+        v = inputs.get(key)
+        if isinstance(v, str):
+            return v
+    return ""
 
 
 def _first_input_value(nodes: List[Dict[str, Any]], key: str) -> Optional[Any]:
